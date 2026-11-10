@@ -1753,6 +1753,7 @@
           <div class="billSlim"><span class="eyebrow">Billing</span><div class="seg" id="billSeg"></div><div class="billDesc" id="billDesc"></div></div>
         </div>
         <button class="lbCard" data-go="house"><i class="lbIc"><svg class="ic"><use href="#ic-crown"/></svg></i><span class="lbTag">Endgame</span><span class="lab">The Last House</span><span class="sub">Teams against the drowned score</span><i class="lbGo">›</i></button>
+        <button class="lbCard" data-href="front/index.html"><i class="lbIc"><svg class="ic"><use href="#ic-swords"/></svg></i><span class="lbTag">War · Desktop</span><span class="lab">The Drowned Front</span><span class="sub" id="lFrontSub">A third-person war for the whole company</span><i class="lbGo">›</i></button>
       </div>
     </div>
     <div class="lbPanel" data-lbpanel="main"><p class="lbHint">Halls of action and music, a performance at a time.</p><div class="lbModes">
@@ -1779,7 +1780,6 @@
       <button class="lbMode" data-go="fishing"><i><svg class="ic"><use href="#ic-hook"/></svg></i><span><b>Fishing &amp; Salon</b><small>Deep catches and buffs</small></span><svg class="ic"><use href="#ic-go"/></svg></button>
       <button class="lbMode" data-go="expeditions"><i><svg class="ic"><use href="#ic-compass"/></svg></i><span><b>Troupe Expeditions</b><small>Send the troupe on voyages</small></span><svg class="ic"><use href="#ic-go"/></svg></button>
       <a class="lbMode" href="3d/index.html"><i><svg class="ic"><use href="#ic-stage"/></svg></i><span><b>The Drowned Stage (3D)</b><small>Prototype: a 3D turn-based battle</small></span><svg class="ic"><use href="#ic-go"/></svg></a>
-      <a class="lbMode" href="front/index.html"><i><svg class="ic"><use href="#ic-anchor"/></svg></i><span><b>The Drowned Front (third-person war)</b><small>Desktop · the company goes to war</small></span><svg class="ic"><use href="#ic-go"/></svg></a>
     </div></div>
   </div>
   <nav class="lbRail live" aria-label="Manage the company and the house">
@@ -7928,11 +7928,11 @@ const LEADS = {
   corvina: { id: 'corvina', name: 'Contessa Corvina', title: 'the Deep Cellist', look: 'cellist', sig: 'cellist', rate: 0.55, dmg: 2.1, range: 1.1, move: 0.95, pierce: 2,
     ar: { e: 'Sostenuto', r: 'Low Drone', q: 'Requiem for Strings', es: 'Sostenuto', rs: 'Drone' },
     blurb: 'Slow, heavy bow strokes that pierce three foes. Sostenuto holds a searing beam of sound; the Low Drone slows and wears down everything around her.',
-    unlock: 'Defeat the Abyssal Warden in the corridor, or reach Season rank IV.' },
+    unlock: 'Defeat the Abyssal Warden in the corridor or in the Drowned Front, or reach Season rank IV.' },
   liesel: { id: 'liesel', name: 'Liesel', title: 'the Foam Dancer', look: 'dancer', sig: 'dancer', rate: 1.6, dmg: 0.95, range: 0.55, move: 1.3, pierce: 0,
     ar: { e: 'Fouetté', r: 'Corps de Ballet', q: 'Grand Jeté', es: 'Fouetté', rs: 'Corps' },
     blurb: 'A close-range whirlwind who moves fastest of all. Her ribbon fans strike quickly but not far; the Fouetté spins through everything near her.',
-    unlock: 'Survive ten waves of the Masquerade, or reach Season rank VIII.' },
+    unlock: 'Survive ten waves of the Masquerade, defeat 300 of the drowned in the Drowned Front, or reach Season rank VIII.' },
   caliste: { id: 'caliste', name: 'Caliste Voss', title: 'the Blue Hour', look: 'ultimate', ultimate: true, sig: 'bluehour', rate: 1.35, dmg: 1.4, range: 0.9, move: 1.18, pierce: 1,
     ar: { e: 'Gold Filament', r: 'Harness Lock', q: 'Blue Hour', es: 'Filament', rs: 'Lock' },
     blurb: 'An Ultimate. Her body is not the company’s: longer, lit as a solid form, and dressed in royal cloth with a gold harness. The gowns in this room do not change her. Gold Filament cuts a lane; Harness Lock hardens the next blows.',
@@ -7950,8 +7950,8 @@ function leadUnlocked(id) {
   if (LEADS[id] && LEADS[id].ultimate) return !!(save.wish && save.wish.ownedLeads && save.wish.ownedLeads[id]);
   if (save.wish && save.wish.ownedLeads && save.wish.ownedLeads[id]) return true;
   const r = seasonRank();
-  if (id === 'corvina') return !!save.reviews.warden || r >= 4;
-  if (id === 'liesel') return !!save.reviews.masq10 || r >= 8;
+  if (id === 'corvina') return !!save.reviews.warden || r >= 4 || !!(save.front && save.front.bosses && save.front.bosses.warden);
+  if (id === 'liesel') return !!save.reviews.masq10 || r >= 8 || !!(save.front && save.front.kills >= 300);
   return false;
 }
 function checkLeads() {
@@ -19129,7 +19129,43 @@ document.addEventListener('click', e => {
   const m = b.dataset.go || b.dataset.tdgo;
   if (tdLocked(m) > 0) { e.stopImmediatePropagation(); e.preventDefault(); sfx('ui'); showToast('Not yet', 'Play a little more of the Story first', `${tdLocked(m)} more battle${tdLocked(m) > 1 ? 's' : ''}`); }
 }, true);
-(function () { const prev = onModeEnter; onModeEnter = function (m, o) { const r = prev.apply(this, arguments); if (m === 'chars') { save.settings.sawChars = true; } if (m === 'lobby') { try { renderToday(); tdApplyGates(); } catch (e) {} } return r; }; })();
+
+// ================= The Drowned Front: the 3D war pays out into the main game =================
+SKINS.push(
+  { id: 'frontline', name: 'Front-Line Prima', cost: 0, unlock: 'Earned by defeating 200 of the drowned in the Drowned Front.', desc: 'A rain-darkened tailcoat of the company’s war years, with ember-gold braid.', coat: '#3a1a2a', torso: '#7a2a3c', trim: '#ffd070', hair: '#fff0e0', streak: '#ff7a5a', hat: '#1a0a10', band: '#ffb050', bolt: '#ffd9a0', aura: '255,170,90' },
+  { id: 'warslayer', name: 'Warden’s Bane', cost: 0, unlock: 'Earned by defeating all five major bosses in the Drowned Front.', desc: 'Silver and storm-teal, cut from the cloth of the Warden’s own bell-rope.', coat: '#10303a', torso: '#2a6a7a', trim: '#e8fbff', hair: '#e8f8ff', streak: '#5affd8', hat: '#061a20', band: '#9ae8ff', bolt: '#c8fff4', aura: '90,255,220' });
+HONOURS.push({ id: 'front', name: 'The Drowned Front', unit: 'drowned defeated', tiers: [[40, { t: 'pearls', v: 150 }], [200, { t: 'skin', v: 'frontline' }], [600, { t: 'skin', v: 'warslayer' }]] });
+ERR_DAY.push({ id: 'd_front', ev: 'front', need: 30, name: 'Defeat 30 of the drowned in the Drowned Front' }); ERR_WEEK.push({ id: 'w_front', ev: 'front', need: 150, name: 'Defeat 150 of the drowned in the Drowned Front' });
+const FRONT_BOSSES = { warden: 'The Abyssal Warden', kraken: 'The Drowned Kraken Matriarch', conductor: 'The Phantom Conductor', leviathan: 'The Hollow Leviathan', impresario: 'The Crimson Impresario' };
+function processFrontDispatch() {
+  if (!save.frontInbox || !save.frontInbox.length) return;
+  const F = save.front || (save.front = { kills: 0, bosses: {}, clears: 0, runs: {} });
+  let kills = 0, clears = 0; const nb = [];
+  for (const d of save.frontInbox) {
+    const prev = F.runs[d.id] || { k: 0, c: false };
+    kills += Math.max(0, (d.kills || 0) - prev.k);
+    for (const b of (d.bosses || [])) if (FRONT_BOSSES[b] && !F.bosses[b]) { F.bosses[b] = Date.now(); nb.push(b); }
+    if (d.clear && !prev.c) clears++;
+    F.runs[d.id] = { k: Math.max(prev.k, d.kills || 0), c: prev.c || !!d.clear };
+  }
+  save.frontInbox = []; const ks = Object.keys(F.runs); if (ks.length > 30) for (const k of ks.slice(0, ks.length - 30)) delete F.runs[k];
+  if (!kills && !nb.length && !clears) { persist(); return; }
+  F.kills += kills; F.clears += clears;
+  const coins = kills * 14 + nb.length * 700 + clears * 1500, renown = Math.round(kills * 0.6 + nb.length * 80 + clears * 150), bonusPearls = nb.length * 60 + clears * 100, hadSkins = save.owned.length;
+  save.coins += coins; const earned = earnPearls(Math.round(kills * 0.5)); save.wish.pearls += bonusPearls; addRenown(renown);
+  honour('front', kills); errand('front', kills);
+  if (clears) { const S2 = honState(); S2.n.story = Math.max(S2.n.story || 0, 1); }
+  checkLeads(); persist();
+  const rows = []; if (kills) rows.push([`${kills} drowned defeated`, 0]);
+  rows.push(['Coins', coins]); if (earned + bonusPearls) rows.push(['Tide pearls', earned + bonusPearls]); if (renown) rows.push(['Renown', renown]);
+  for (const b of nb) rows.push([`First defeat: ${FRONT_BOSSES[b]}`, 0]);
+  if (clears) rows.push(['Chapter I cleared', 0]);
+  const got = []; if (save.owned.length > hadSkins) got.push('A new costume was added to your wardrobe.'); if (nb.includes('warden')) got.push('Contessa Corvina can now join the company.');
+  recapShow('Dispatch from the Drowned Front', rows, got.join(' ') || 'Your honours and errands have been updated.');
+}
+document.querySelectorAll('[data-href]').forEach(b => b.onclick = () => { sfx('ui'); location.href = b.dataset.href; });
+function frontSub() { const el = document.getElementById('lFrontSub'), F = save.front; if (el) el.textContent = F && (F.kills || F.clears) ? `${fmt(F.kills)} drowned defeated · ${Object.keys(F.bosses).length} of 5 bosses` : 'A third-person war for the whole company'; }
+(function () { const prev = onModeEnter; onModeEnter = function (m, o) { const r = prev.apply(this, arguments); if (m === 'chars') { save.settings.sawChars = true; } if (m === 'lobby') { try { processFrontDispatch(); frontSub(); renderToday(); tdApplyGates(); } catch (e) { console.warn(e); } } return r; }; })();
 try { renderToday(); tdApplyGates(); } catch (e) {}
 
 // opt-in, local-only record of which halls were opened (kept on this device, never sent anywhere); the Today tab also shows the wallet and a spending hint
@@ -25073,6 +25109,12 @@ function drawMosaic() {
 }
 
 
+// the story's own art, rendered to canvases so the 3D mode can use the real designs (bosses, costumes, faces)
+window.__art = {
+  boss(id, px) { const cv = document.createElement('canvas'); cv.width = cv.height = px; const c = cv.getContext('2d'); const op = proj, os = S, om = mode; proj = () => ({ x: px / 2, y: px * 0.9, half: px * 0.4525, s: 1, f: 0 }); S = { t: 1.4, wave: 1, buffs: { freeze: 0 } }; mode = 'dev'; try { drawBossFlat(c, { x: 0, z: 0, phase: 1, cast: 0.15, flash: 0, def: BOSSES.find(b => b.id === id) }); } finally { proj = op; S = os; mode = om; } return cv; },
+  hero(id, px, skinId) { const cv = document.createElement('canvas'); cv.width = cv.height = px; const c = cv.getContext('2d'), s = px * 0.46; if (id === 'ondine' || (LEADS[id] && !LEADS[id].ultimate)) drawHeroineFrontFlat(c, px / 2, px * 0.97, s, skinId ? skinOf(skinId) : chSkin(id), 1, { look: id === 'ondine' ? 'diva' : LEADS[id].look, bare: true }); else drawCompanionFlat(c, px / 2, px * 0.97, s, id, 1, { bare: true }); return cv; },
+  get SKINS() { return SKINS; }, get COMP() { return COMP; }, get LEADS() { return LEADS; }, get HEROES() { return HEROES; },
+};
 window.__game = {
   // Ultra expansions exports
   get UNISON_PAIRS() { return UNISON_PAIRS; }, checkUnisonReady, triggerUnisonArioso, initGambitData, evaluateGambits, openGambitModal, closeGambitModal, addGambitRule, removeGambitRule, saveGambitsFromUI,
