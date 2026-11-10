@@ -9,8 +9,10 @@ Run it from a terminal (Blender 3.6 or newer):
   --height H       final height in game units (default 2.35, the size of the placeholder heroes)
   --tex N          shrink any texture larger than N pixels (default 2048)
   --jpeg           save textures as JPEG (much smaller files; a little lossy)
-  --keep-rig       the model already has a skeleton: do NOT merge or decimate the skinned meshes' weights
-                   (decimating skinned meshes can damage the skin weights, so they are only cleaned and exported)
+  --keep-rig       do not shrink the mesh at all (only clean, scale and export)
+
+Rigged models are shrunk too; the bone weights are carried over by the Decimate modifier.
+Animations are kept. If the model has one clip, name it in Blender or in the game manifest as you like.
 
 On macOS the Blender program is usually /Applications/Blender.app/Contents/MacOS/Blender
 """
@@ -62,14 +64,19 @@ for o in meshes:
 
 # ---- shrink to the target triangle budget ----
 before = tri_count(meshes)
-if rigged or KEEP_RIG:
-    print('Rigged model: skipping decimation so the skin weights are not damaged.')
+if KEEP_RIG:
+    print('--keep-rig: skipping decimation.')
 elif before > TARGET_TRIS:
-    if len(meshes) > 1:
+    if len(meshes) > 1 and not rigged:
         select_only(meshes); bpy.ops.object.join(); meshes = [bpy.context.view_layer.objects.active]
-    o = meshes[0]
-    mod = o.modifiers.new('Shrink', 'DECIMATE'); mod.decimate_type = 'COLLAPSE'; mod.ratio = max(0.01, TARGET_TRIS / before); mod.use_collapse_triangulate = True
-    select_only([o]); bpy.ops.object.modifier_apply(modifier=mod.name)
+    for o in meshes:
+        share = tri_count([o]) / before
+        mod = o.modifiers.new('Shrink', 'DECIMATE'); mod.decimate_type = 'COLLAPSE'
+        mod.ratio = max(0.01, min(1.0, TARGET_TRIS * share / max(1, tri_count([o])))); mod.use_collapse_triangulate = True
+        select_only([o])
+        if rigged:   # shrink the mesh itself, before the skeleton bends it, and keep the bone weights
+            bpy.ops.object.modifier_move_to_index(modifier=mod.name, index=0)
+        bpy.ops.object.modifier_apply(modifier=mod.name)
 print(f'Triangles: {before} -> {tri_count([o for o in bpy.context.scene.objects if o.type == "MESH"])}')
 
 # ---- shrink big textures ----

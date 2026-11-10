@@ -190,10 +190,10 @@ async function applyGLB(u,spec){
     if(!o.isSkinnedMesh&&spec.outline===true){const m=outlineMat.clone();const ws=o.getWorldScale(new THREE.Vector3());m.uniforms.t.value=.03/Math.max(1e-4,(ws.x+ws.y+ws.z)/3);o.add(new THREE.Mesh(o.geometry,m));}}
   while(u.model.children.length)u.model.remove(u.model.children[0]);u.model.add(pivot);u.model.userData={};u.model.scale.setScalar(1);u.model.rotation.set(0,0,0);
   u.mats=mats;u.def=Object.assign({},u.def,{sc:0,float:u.def.float?1:0,notes:0});
-  u.mixer=null;u.clips=g.anims||[];if(u.clips.length){u.mixer=new THREE.AnimationMixer(root);const idle=u.clips.find(c=>/idle|stand|breath/i.test(c.name))||u.clips[0];u.idleAct=u.mixer.clipAction(idle);u.idleAct.play();}
+  u.mixer=null;u.clips=g.anims||[];if(u.clips.length){u.mixer=new THREE.AnimationMixer(root);const idle=u.clips.find(c=>/idle|stand|breath|wait/i.test(c.name));if(idle){u.idleAct=u.mixer.clipAction(idle);u.idleAct.play();}}
   return true;
 }
-function playClip(u,re){if(!u.mixer)return false;const c=u.clips.find(x=>re.test(x.name));if(!c)return false;const a=u.mixer.clipAction(c);a.reset().setLoop(THREE.LoopOnce,1);a.clampWhenFinished=false;if(u.idleAct)u.idleAct.fadeOut(.1);a.fadeIn(.1).play();const done=e=>{if(e.action!==a)return;u.mixer.removeEventListener('finished',done);if(u.idleAct)u.idleAct.reset().fadeIn(.2).play();};u.mixer.addEventListener('finished',done);return true;}
+function playClip(u,re){if(!u.mixer)return false;const c=u.clips.find(x=>re.test(x.name))||(re.test('attack')?u.clips.find(x=>x!==(u.idleAct&&u.idleAct.getClip())):null);if(!c)return false;const a=u.mixer.clipAction(c);a.reset().setLoop(THREE.LoopOnce,1);a.clampWhenFinished=false;if(u.idleAct)u.idleAct.fadeOut(.1);a.fadeIn(.1).play();const done=e=>{if(e.action!==a)return;u.mixer.removeEventListener('finished',done);if(u.idleAct)u.idleAct.reset().fadeIn(.2).play();};u.mixer.addEventListener('finished',done);return true;}
 addEventListener('dragover',e=>e.preventDefault());
 addEventListener('drop',async e=>{e.preventDefault();const f=[...(e.dataTransfer?.files||[])].find(x=>/\.(glb|gltf)$/i.test(x.name));if(!f)return;const ids=Object.keys(MODEL_H);const id=(prompt('Which character is this model for?\n'+ids.join(', '),ids.find(i=>f.name.toLowerCase().includes(i))||'ondine')||'').trim().toLowerCase();if(!ids.includes(id))return;const url=URL.createObjectURL(f);for(const u of[...heroes,...foes])if(u.id===id)await applyGLB(u,{url});note('Model applied to '+id);});
 // ---------- units ----------
@@ -243,7 +243,7 @@ const faceTo=(a,b)=>{const d=b.obj.position.clone().sub(a.obj.position);a.obj.ro
 async function lunge(u,t,dist=1.7){faceTo(u,t);const p0=u.obj.position.clone(),d=t.obj.position.clone().sub(p0).setY(0),L=d.length(),to=p0.clone().add(d.normalize().multiplyScalar(Math.max(0,L-dist)));await tween(.28,k=>u.obj.position.lerpVectors(p0,to,k),eout);return p0;}
 async function home(u,p0){await tween(.35,k=>{u.obj.position.lerpVectors(u.obj.position.clone(),p0,.0+k);u.obj.position.copy(u.obj.position);},k=>k);}
 async function goHome(u){const a=u.obj.position.clone();await tween(.3,k=>u.obj.position.lerpVectors(a,u.home,k));u.obj.rotation.y=u.rotHome;}
-function swing(u,ang=-2.4,dur=.2){if(playClip(u,/attack|strike|slash|hit/i))return Promise.resolve();const arm=u.model.children.find(c=>c.userData.arms)||u.model;const A=(u.model.userData.arms||{}).R;if(!A)return Promise.resolve();return tween(dur,k=>{A.rotation.x=ang*(1-k)+(.3*k);}).then(()=>tween(.3,k=>{A.rotation.x=.3*(1-k);}));}
+function swing(u,ang=-2.4,dur=.2){if(playClip(u,/attack|strike|slash|hit|kick|punch/i))return Promise.resolve();const arm=u.model.children.find(c=>c.userData.arms)||u.model;const A=(u.model.userData.arms||{}).R;if(!A)return Promise.resolve();return tween(dur,k=>{A.rotation.x=ang*(1-k)+(.3*k);}).then(()=>tween(.3,k=>{A.rotation.x=.3*(1-k);}));}
 const sideCam=(u,t,dist=6.5)=>{const m=u.obj.position.clone().add(t.obj.position).multiplyScalar(.5);return camTo(m.clone().add(new THREE.Vector3(-1.5,2.4,dist)),m.clone().add(new THREE.Vector3(0,1.2,0)),.55,38);};
 const faceCam=(u,d=2.4)=>camTo(u.obj.position.clone().add(new THREE.Vector3(d*.85,2,d*.6)),u.obj.position.clone().add(new THREE.Vector3(0,1.8,0)),.7,32);
 const wideCam=()=>camTo(new THREE.Vector3(-11,5.2,5.5),new THREE.Vector3(1.5,1.3,0),.7,48);
@@ -345,7 +345,7 @@ function frame(dt){
 }
 function loop(now){const dt=Math.min(.05,(now-last)/1000)*tScale;last=now;frame(dt);requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
-window.__tb={applyGLB,GLTFExporter,step:(s)=>{for(let i=0;i<s*60;i++)frame(1/60);},heroes,foes,choose,state:()=>({sp,wave,active:active&&active.name,wait:!!choiceRes})};
+window.__tb={cs,applyGLB,GLTFExporter,step:(s)=>{for(let i=0;i<s*60;i++)frame(1/60);},heroes,foes,choose,state:()=>({sp,wave,active:active&&active.name,wait:!!choiceRes})};
 frame(.016);
 $('go').onclick=()=>{$('start').classList.add('hide');tone(440,.1);battle();};
 </script></body></html>
