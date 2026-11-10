@@ -187,7 +187,7 @@ async function applyGLB(u,spec){
   const mk=m=>{const t=new THREE.MeshToonMaterial({color:m.color?m.color.clone():0xffffff,map:m.map||null,gradientMap:grad,transparent:!!m.transparent,opacity:m.opacity??1,alphaTest:m.alphaTest||0,side:m.side});if(m.emissive)t.emissive.copy(m.emissive);t.emissiveMap=m.emissiveMap||null;t.userData.e=t.emissive.getHex();mats.push(t);return t;};
   pivot.updateMatrixWorld(true);
   for(const o of meshes){o.castShadow=true;o.receiveShadow=true;o.material=Array.isArray(o.material)?o.material.map(mk):mk(o.material);
-    if(!o.isSkinnedMesh&&!(spec.outline===false)){const m=outlineMat.clone();const ws=o.getWorldScale(new THREE.Vector3());m.uniforms.t.value=.03/Math.max(1e-4,(ws.x+ws.y+ws.z)/3);o.add(new THREE.Mesh(o.geometry,m));}}
+    if(!o.isSkinnedMesh&&spec.outline===true){const m=outlineMat.clone();const ws=o.getWorldScale(new THREE.Vector3());m.uniforms.t.value=.03/Math.max(1e-4,(ws.x+ws.y+ws.z)/3);o.add(new THREE.Mesh(o.geometry,m));}}
   while(u.model.children.length)u.model.remove(u.model.children[0]);u.model.add(pivot);u.model.userData={};u.model.scale.setScalar(1);u.model.rotation.set(0,0,0);
   u.mats=mats;u.def=Object.assign({},u.def,{sc:0,float:u.def.float?1:0,notes:0});
   u.mixer=null;u.clips=g.anims||[];if(u.clips.length){u.mixer=new THREE.AnimationMixer(root);const idle=u.clips.find(c=>/idle|stand|breath/i.test(c.name))||u.clips[0];u.idleAct=u.mixer.clipAction(idle);u.idleAct.play();}
