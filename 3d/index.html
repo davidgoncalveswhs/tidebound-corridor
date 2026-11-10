@@ -174,7 +174,7 @@ const FOES={
 };
 
 // ---------- real models: drop a .glb in 3d/models and list it in manifest.json (or drag a .glb onto the page) ----------
-const manifestP=fetch('models/manifest.json').then(r=>r.ok?r.json():{}).catch(()=>({}));
+const manifestP=fetch('models/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({}));
 const glbLoader=new GLTFLoader(),glbCache={},MODEL_H={ondine:2.35,caliste:2.35,maren:2.35,usher:2.0,hound:1.5,voice:2.7,reaver:3.4};
 async function loadGLB(url){if(!glbCache[url])glbCache[url]=glbLoader.loadAsync(url);const g=await glbCache[url];return {scene:SkeletonUtils.clone(g.scene),anims:g.animations};}
 async function applyGLB(u,spec){
