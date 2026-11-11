@@ -684,9 +684,16 @@ function buildChar(sp){const pivot=new THREE.Group(),root=new THREE.Group();pivo
   pivot.updateMatrixWorld(true);const r=mkRig(root,pivot);r.aura=sp.aura;return r;}
 ['ondine','caliste','tobias','mirelle'].forEach((id,i)=>{const r=buildChar(SPEC[id]);tpRoot.add(r.pivot);r.pivot.visible=false;rigs[i]=r;});
 
-// Ondine: the real model, if the file is there. Her one animation, a flying kick, is her Riptide Waltz.
-(beachOndine?new GLTFLoader().loadAsync('../3d/models/ondine.glb?v=3'):Promise.reject('story costume')).then(g=>{const root=g.scene,pivot=new THREE.Group();pivot.add(root);root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root);const k=RIGH/(box.max.y-box.min.y||1);pivot.scale.setScalar(k);pivot.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(pivot);const c=box.getCenter(V3());root.position.add(V3(-c.x/k,-box.min.y/k,-c.z/k));
-  const old=rigs[0];if(old){tpRoot.remove(old.pivot);}const r=mkRig(root,pivot);if(g.animations&&g.animations.length){r.mixer=new THREE.AnimationMixer(root);r.clip=g.animations.find(a=>/kick/i.test(a.name))||null;const wc=g.animations.find(a=>/walk/i.test(a.name));if(wc){const tk=wc.tracks.find(x=>x.name==='Hips.position');if(tk){const v=tk.values;for(let i=0;i<v.length;i+=3){v[i]=v[0];v[i+2]=v[2];}}r.walkAct=r.mixer.clipAction(wc);r.walkAct.play();r.walkAct.enabled=false;}}tpRoot.add(pivot);rigs[0]=r;refreshRigs();}).catch(e=>{if(e!=='story costume')console.warn('Ondine model not loaded',e);});
+// Characters with a real model: the rigged file replaces the stand-in body when the player has earned it from the box office.
+// Each clip is optional: a walk plays in place on the ground, and Ondine's flying kick is her Riptide Waltz.
+function loadRigModel(idx,url,allowed){
+  if(!allowed)return;
+  new GLTFLoader().loadAsync(url).then(g=>{const root=g.scene,pivot=new THREE.Group();pivot.add(root);root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root);const k=RIGH/(box.max.y-box.min.y||1);pivot.scale.setScalar(k);pivot.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(pivot);const c=box.getCenter(V3());root.position.add(V3(-c.x/k,-box.min.y/k,-c.z/k));
+    const old=rigs[idx];if(old)tpRoot.remove(old.pivot);const r=mkRig(root,pivot);r.aura=old&&old.aura;
+    if(g.animations&&g.animations.length){r.mixer=new THREE.AnimationMixer(root);r.clip=g.animations.find(a=>/kick/i.test(a.name))||null;const wc=g.animations.find(a=>/walk/i.test(a.name));if(wc){const tk=wc.tracks.find(x=>x.name==='Hips.position');if(tk){const v=tk.values;for(let i=0;i<v.length;i+=3){v[i]=v[0];v[i+2]=v[2];}}r.walkAct=r.mixer.clipAction(wc);r.walkAct.play();r.walkAct.enabled=false;}}
+    tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
+loadRigModel(0,'../3d/models/ondine.glb?v=3',beachOndine);
+loadRigModel(1,'../3d/models/caliste.glb?v=1',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
 function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur&&!P.dead||(tpOn&&P.dead&&i===P.cur);});}
 function setView(tp,quiet){tpOn=tp;gunHolder=tp?gunRoot:vm;gunHolder.add(gunG,flash,flashL);if(!tp){gunG.position.set(0,0,0);}armsG.visible=!tp;vm.visible=!tp;gunRoot.visible=tp;tpRoot.visible=tp;refreshRigs();if(!quiet)msg(tp?'THIRD PERSON':'FIRST PERSON',900);}
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&G.state==='play')setView(!tpOn);});

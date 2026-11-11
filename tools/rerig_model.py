@@ -59,5 +59,10 @@ bpy.data.objects.remove(src, do_unlink=True)
 for img in bpy.data.images:
     if img.size[0] > MAXTEX or img.size[1] > MAXTEX:
         k2 = MAXTEX / max(img.size); img.scale(max(1, int(img.size[0] * k2)), max(1, int(img.size[1] * k2)))
-bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', export_yup=True, export_apply=True, export_animations=True, export_skins=True, export_image_format='JPEG', export_jpeg_quality=85)
+# keep every animation clip of the old file (each on its own NLA track)
+acts = list(bpy.data.actions); arm.animation_data_create(); arm.animation_data.action = None
+for ac in acts:
+    ac.use_fake_user = True; tr = arm.animation_data.nla_tracks.new(); tr.name = ac.name; tr.strips.new(ac.name, 0, ac)
+print('clips kept', [ac.name for ac in acts])
+bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', export_yup=True, export_apply=True, export_animations=True, export_animation_mode='NLA_TRACKS', export_skins=True, export_image_format='JPEG', export_jpeg_quality=85)
 print('Saved', out, round(os.path.getsize(out) / 1e6, 1), 'MB')
