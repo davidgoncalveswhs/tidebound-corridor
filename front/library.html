@@ -613,7 +613,7 @@ function buildChar(sp){const pivot=new THREE.Group(),root=new THREE.Group();pivo
   pivot.updateMatrixWorld(true);const r=mkRig(root,pivot);r.aura=sp.aura;return r;}
 SQUAD_IDS.forEach((id,i)=>{const r=buildChar(SPEC[id]);tpRoot.add(r.pivot);r.pivot.visible=false;rigs[i]=r;});
 
-// Characters with a real model: the rigged file replaces the stand-in body when the player has earned it from the box office.
+// Characters with a real model: the rigged file replaces the stand-in body on any map that includes them.
 // Each clip is optional: a walk plays in place on the ground, and Ondine's flying kick is her Riptide Waltz.
 function loadRigModel(idx,url,allowed){
   if(!allowed||idx<0)return;
@@ -630,7 +630,8 @@ function loadFloatModel(idx,url,allowed){
 const mirelleJoined=!!(SAVE.campaign&&SAVE.campaign.party&&SAVE.campaign.party.includes('mirelle'));
 loadFloatModel(ix('mirelle'),'../3d/models/mirelle.glb?v=1',true);
 loadRigModel(ix('ondine'),'../3d/models/ondine.glb?v=3',beachOndine);
-loadRigModel(ix('caliste'),'../3d/models/caliste.glb?v=2',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
+loadRigModel(ix('caliste'),'../3d/models/caliste.glb?v=2',true);
+loadRigModel(ix('maren'),'../3d/models/maren.glb?v=2',true);
 function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur&&!P.dead||(tpOn&&P.dead&&i===P.cur);});}
 function setView(tp,quiet){tpOn=tp;gunHolder=tp?gunRoot:vm;gunHolder.add(gunG,flash,flashL);if(!tp){gunG.position.set(0,0,0);}armsG.visible=!tp;vm.visible=!tp;gunRoot.visible=tp;tpRoot.visible=tp;refreshRigs();if(!quiet)msg(tp?'THIRD PERSON':'FIRST PERSON',900);}
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&G.state==='play')setView(!tpOn);});
@@ -665,7 +666,7 @@ setView(true,true);
 const rope=new THREE.Mesh(new THREE.CylinderGeometry(.022,.022,1,6),new THREE.MeshBasicMaterial({color:0xffe6a0,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false})),hookTip=new THREE.Mesh(new THREE.OctahedronGeometry(.16),new THREE.MeshBasicMaterial({color:0xffd070}));rope.visible=hookTip.visible=false;rope.frustumCulled=false;scene.add(rope,hookTip);
 sfx.hook=()=>{tone(1500,.12,.1,'sawtooth',-900);noise(.14,5000,.12,'highpass');};sfx.unhook=()=>tone(500,.1,.08,'triangle',200);
 function fireHook(){if(G.state!=='play'||P.dead||P.hook.on||P.hook.cd>0)return;const o=tpOn?camera.position.clone():eye(),d=camFwd();ray.set(o,d);ray.far=125;const h=ray.intersectObjects(solids,false)[0];
-  if(!h||h.distance<4||h.point.y<2.2){msg('Aim at something high to anchor the fly-line',1000);P.hook.cd=.2;return;}
+  if(!h||h.distance<4){msg('Aim at a surface to anchor the fly-line',1000);P.hook.cd=.2;return;}
   const hk=P.hook;hk.on=true;P.glideOn=false;hk.a.copy(h.point);const body=new THREE.Vector3(P.pos.x,P.pos.y+1.3,P.pos.z);hk.len=Math.max(7,body.distanceTo(hk.a));P.ground=false;P.glide=0;P.vel.addScaledVector(hk.a.clone().sub(body).normalize(),13);P.vel.y+=5;burst(h.point,0xffd890,22,6,.5,4);sfx.hook();}
 function releaseHook(zip){const hk=P.hook;if(!hk.on)return;hk.on=false;hk.cd=.12;P.glide=2.6;if(zip)P.vel.y+=6;else if(P.vel.y>0)P.vel.y+=1.5;P.vel.multiplyScalar(1.06);sfx.unhook();}
 function hookHandPos(){const r=tpOn&&rigs[P.cur]&&rigs[P.cur].B.RightHand;if(r)return r.getWorldPosition(new THREE.Vector3());return new THREE.Vector3(P.pos.x,P.pos.y+1.4,P.pos.z);}
@@ -750,7 +751,7 @@ setInterval(()=>{if(G.state!=='play')return;if(G.kills>lastK&&G.kills%5===0)bark
 // ----- tutorial hints -----
 {const el=document.createElement('div');el.className='hud';el.id='tut';document.body.appendChild(el);
 const tstate={mv:0,ads:0,rl:0,hk:0,gl:0,sw:0,sk:0,fire:0};let ti=0,tdone=!1,tcool=0;
-const STEPS=[['<b>W A S D</b> to move, <b>Shift</b> to sprint',()=>tstate.mv>14],['Hold <b>right mouse</b> to aim down the scope — scroll to zoom',()=>tstate.ads>.6],['Press <b>R</b> to swap magazines',()=>tstate.rl],['Aim at something high, hold <b>F</b> to fire the fly-line, then release to launch',()=>tstate.hk],['Press <b>Space</b> in the air to unfurl your glider wings',()=>tstate.gl],['Press <b>1-4</b> to swap company members',()=>tstate.sw],['Press <b>Q</b> for your skill, <b>X</b> for your ultimate',()=>tstate.sk]];
+const STEPS=[['<b>W A S D</b> to move, <b>Shift</b> to sprint',()=>tstate.mv>14],['Hold <b>right mouse</b> to aim down the scope — scroll to zoom',()=>tstate.ads>.6],['Press <b>R</b> to swap magazines',()=>tstate.rl],['Aim at a surface, hold <b>F</b> to fire the fly-line, then release to launch',()=>tstate.hk],['Press <b>Space</b> in the air to unfurl your glider wings',()=>tstate.gl],['Press <b>1-4</b> to swap company members',()=>tstate.sw],['Press <b>Q</b> for your skill, <b>X</b> for your ultimate',()=>tstate.sk]];
 addEventListener('keydown',e=>{if(G.state!=='play')return;if(e.code==='KeyR')tstate.rl=1;if(e.code==='KeyF')tstate.hk=1;if(e.code==='KeyQ'||e.code==='KeyX')tstate.sk=1;if(/^Digit[1-4]$/.test(e.code))tstate.sw=1;});
 let tpos=null;
 setInterval(()=>{if(G.state!=='play'||!ST.hints){el.style.opacity=0;return;}if(!tpos)tpos=P.pos.clone();tstate.mv+=0;tstate.mv=Math.max(tstate.mv,P.pos.distanceTo(tpos));tstate.ads=Math.max(tstate.ads,P.ads);if(P.glideOn)tstate.gl=1;if(ti>=STEPS.length){el.style.opacity=0;return;}
@@ -834,7 +835,7 @@ function frame(dt){pollPad(dt);update(dt);scopeOn=!P.dead&&W().overlay&&P.ads>.8
   if(tpOn){const pv=new THREE.Vector3(P.pos.x,P.pos.y+1.55,P.pos.z),f=camFwd(),rt=new THREE.Vector3(Math.cos(P.yaw),0,-Math.sin(P.yaw));let want=pv.clone().addScaledVector(f,-(2.6-.9*P.ads+(P.glideOn?1.6:0)));want.y+=.45;if(scopeOn){want=new THREE.Vector3(P.pos.x,P.pos.y+1.68,P.pos.z);}else{const dv=want.clone().sub(pv),L=dv.length();dv.normalize();ray.set(pv,dv);ray.far=L;const hh=ray.intersectObjects(solids,false)[0];if(hh)want=pv.clone().addScaledVector(dv,Math.max(.6,hh.distance-.25));}
     camera.position.lerp(want,scopeOn?1:1-Math.pow(1e-5,dt));camera.position.x+=rr(-1,1)*shake*.03;camera.position.y+=rr(-1,1)*shake*.03;camera.rotation.set(P.pitch,P.yaw,0);
     if(window.__dbgCam){camera.position.copy(window.__dbgCam);camera.lookAt(P.pos.x,P.pos.y+1.3,P.pos.z);}
-    ray.set(camera.position,camFwd());ray.far=125;const ah=ray.intersectObjects(solids,false)[0];aimDist=ah?Math.min(ah.distance,80):60;P.hookable=!!(ah&&ah.distance>4&&ah.distance<125&&ah.point.y>2.2);const ae=rayEnemy(camera.position,camFwd(),aimDist);if(ae)aimDist=ae.t;aimDist=Math.max(4,aimDist);
+    ray.set(camera.position,camFwd());ray.far=125;const ah=ray.intersectObjects(solids,false)[0];aimDist=ah?Math.min(ah.distance,80):60;P.hookable=!!(ah&&ah.distance>4&&ah.distance<125);const ae=rayEnemy(camera.position,camFwd(),aimDist);if(ae)aimDist=ae.t;aimDist=Math.max(4,aimDist);
     const rg=rigs[P.cur];if(rg){const k=updRig(rg,dt);gunRoot.visible=k!=='kick'&&!scopeOn&&!P.glideOn;tpRoot.visible=!scopeOn;}}
   else{camera.position.set(P.pos.x+bobX+rr(-1,1)*shake*.03,P.pos.y+1.68+bobY+(P.dead?-1.1:0)+rr(-1,1)*shake*.03,P.pos.z);camera.rotation.set(P.pitch,P.yaw,P.dead?.9:0);vm.visible=!scopeOn;}
   const rl=P.reload>0?Math.sin(clamp(1-P.reload/Math.max(.4,W().reload),0,1)*Math.PI):0,spr=(keys.ShiftLeft&&keys.KeyW&&P.reload<=0)?1:0;
