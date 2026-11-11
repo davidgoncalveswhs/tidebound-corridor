@@ -342,7 +342,8 @@ const vm=new THREE.Group();camera.add(vm);vm.position.set(.21,-.23,-.52);let gun
 const flash=new THREE.Mesh(new THREE.PlaneGeometry(.26,.26),new THREE.MeshBasicMaterial({map:dotTex,color:0xffd890,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));vm.add(flash);
 const flashL=new THREE.PointLight(0xffc070,0,9,2);vm.add(flashL);
 const gloveM=new THREE.MeshStandardMaterial({color:0x4d5238,roughness:.85,envMapIntensity:.5});
-function buildGun(w){if(gunG)gunHolder.remove(gunG);gunG=new THREE.Group();gunHolder.add(gunG);armsG=new THREE.Group();gunG.add(armsG);const L=w.len,Bx=(a,b,c)=>new THREE.BoxGeometry(a,b,c);
+const SKIN_FPS={ondine:'#e2ae96',caliste:'#c8946c',tobias:'#dcb090',mirelle:'#cfe4ea'};
+function buildGun(w){gloveM.color.set(SKIN_FPS[H().id]||'#e2ae96');gloveM.roughness=.6;if(gunG)gunHolder.remove(gunG);gunG=new THREE.Group();gunHolder.add(gunG);armsG=new THREE.Group();gunG.add(armsG);const L=w.len,Bx=(a,b,c)=>new THREE.BoxGeometry(a,b,c);
   const gm=new THREE.MeshStandardMaterial({color:w.body,metalness:.85,roughness:.42,envMapIntensity:1.2}),gm2=new THREE.MeshStandardMaterial({color:0x17181b,metalness:.6,roughness:.55,envMapIntensity:1}),am=new THREE.MeshStandardMaterial({color:w.acc,metalness:1,roughness:.3,envMapIntensity:1.6,emissive:w.acc,emissiveIntensity:.15});
   const part=(geo,mat,x,y,z,rx=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.x=rx;m.frustumCulled=false;gunG.add(m);return m;};
   const muz=-.38-.3*L;part(Bx(.07,.1,.42),gm,0,0,-.05);part(Bx(.06,.075,.22*L),gm2,0,-.005,-.16-.11*L);
