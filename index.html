@@ -19159,7 +19159,7 @@ function processFrontDispatch() {
   const rows = []; if (kills) rows.push([`${kills} drowned defeated`, 0]);
   rows.push(['Coins', coins]); if (earned + bonusPearls) rows.push(['Tide pearls', earned + bonusPearls]); if (renown) rows.push(['Renown', renown]);
   for (const b of nb) rows.push([`First defeat: ${FRONT_BOSSES[b]}`, 0]);
-  if (clears) rows.push(['Chapter I cleared', 0]);
+  if (clears) rows.push(['Every major boss defeated', 0]);
   const got = []; if (save.owned.length > hadSkins) got.push('A new costume was added to your wardrobe.'); if (nb.includes('warden')) got.push('Contessa Corvina can now join the company.');
   recapShow('Dispatch from the Drowned Front', rows, got.join(' ') || 'Your honours and errands have been updated.');
 }
