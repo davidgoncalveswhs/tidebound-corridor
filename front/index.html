@@ -58,7 +58,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 <div id="wps"></div>
 <div class="ov" id="start"><div class="card"><div class="eb">Tidebound Corridor · The Overture War</div><h1>The Drowned Front</h1>
 <p>The drowned have taken the opera house, and five great horrors hold its four acts. Lead the company as Lady Ondine and Caliste Voss and defeat every major boss on the map: the Leviathan, the Kraken Matriarch, the Phantom Conductor, the Crimson Impresario and the Abyssal Warden. Free Tobias and Mirelle along the way to bring them into the fight.</p>
-<div class="keys"><b>W A S D</b><span>Move</span><b>Shift</b><span>Sprint</span><b>Space</b><span>Jump</span><b>Mouse / click</b><span>Fire</span><b>Right mouse</b><span>Aim down the scope</span><b>Wheel</b><span>Zoom the scope</span><b>F (hold)</b><span>Fire the fly-line and swing</span><b>Space (swinging)</b><span>Reel in</span><b>R</b><span>Reload (watch the magazine swap)</span><b>1 2 3 4</b><span>Switch company member</span><b>Q</b><span>Skill</span><b>X</b><span>Ultimate (charges as you fight)</span><b>V</b><span>Third person / first person</span><b>E (hold)</b><span>Free a captive</span><b>Arrow keys</b><span>Look, if the mouse is locked out</span></div>
+<div class="keys"><b>W A S D</b><span>Move</span><b>Shift</b><span>Sprint</span><b>Space</b><span>Jump</span><b>Mouse / click</b><span>Fire</span><b>Right mouse</b><span>Aim down the scope</span><b>Wheel</b><span>Zoom the scope</span><b>F (hold)</b><span>Fire the fly-line and swing</span><b>Space (swinging)</b><span>Reel in</span><b>R</b><span>Reload (watch the magazine swap)</span><b>1 2 3 4</b><span>Switch company member</span><b>Q</b><span>Skill</span><b>X</b><span>Ultimate (charges as you fight)</span><b>V</b><span>Third person / first person</span><b>M</b><span>Open the full map</span><b>E (hold)</b><span>Free a captive</span><b>Arrow keys</b><span>Look, if the mouse is locked out</span></div>
 <button class="btn" id="go">Click to begin</button><a href="../">← Back to the main menu</a></div></div>
 <div class="ov hide" id="pause"><div class="card"><div class="eb">Paused</div><h1>Intermission</h1><button class="btn" id="resume">Resume</button><a href="../">← Back to the main menu</a></div></div>
 <div class="ov hide" id="end"><div class="card"><div class="eb" id="eEb"></div><h1 id="eH"></h1><p id="eP"></p><div class="stats" id="eS"></div><button class="btn" onclick="location.reload()">Again</button><a href="../">← Back to the main menu</a></div></div>
@@ -211,7 +211,7 @@ for(const [x,z,s,lit] of[[-26,-20,1.1,1],[40,-60,1.3,0],[-60,-118,1.4,1],[62,-12
   const sm=[0,1,2].map(i=>{const m=new THREE.Sprite(new THREE.SpriteMaterial({map:fireTex,color:0x181614,transparent:true,opacity:.5,depthWrite:false}));m.scale.set(6*s,6*s,1);scene.add(m);return {m,t:i*3};});
   let lt=null;if(lit){lt=new THREE.PointLight(0xff8a3a,40,32,2);lt.position.set(x,3*s,z);scene.add(lt);}fires.push({x,z,s,f,f2,sm,lt,ph:R()*6});}
 // the cast of the front: objectives, camps and supplies
-const BELLS=[{x:-22,z:-60,n:'A',label:'THE FORK'},{x:34,z:-212,n:'B',label:'THE SHRINE'},{x:44,z:-54,n:'L',label:'LEVIATHAN',boss:true,bid:'leviathan'},{x:-72,z:-124,n:'K',label:'KRAKEN',boss:true,bid:'kraken'},{x:56,z:-246,n:'C',label:'CONDUCTOR',boss:true,bid:'conductor'},{x:-34,z:-268,n:'I',label:'IMPRESARIO',boss:true,bid:'impresario'},{x:0,z:-352,n:'W',label:'WARDEN',boss:true,bid:'warden'}];
+const BELLS=[{x:-22,z:-60,n:'A',label:'RECRUIT TOBIAS · THE FORK'},{x:34,z:-212,n:'B',label:'RECRUIT MIRELLE · THE SHRINE'},{x:44,z:-54,n:'L',label:'LEVIATHAN',boss:true,bid:'leviathan'},{x:-72,z:-124,n:'K',label:'KRAKEN',boss:true,bid:'kraken'},{x:56,z:-246,n:'C',label:'CONDUCTOR',boss:true,bid:'conductor'},{x:-34,z:-268,n:'I',label:'IMPRESARIO',boss:true,bid:'impresario'},{x:0,z:-352,n:'W',label:'WARDEN',boss:true,bid:'warden'}];
 const CAMPS=[[-30,10,['usher','usher','hound']],[34,2,['usher','hound','voice']],[-70,-14,['usher','usher','voice']],[74,-20,['hound','hound','usher']],[0,-30,['reaver','usher','usher']],[-24,-76,['usher','usher','voice','hound']],[26,-84,['usher','voice','voice']],[-72,-100,['reaver','usher','hound']],[70,-108,['usher','usher','hound','hound']],[0,-124,['reaver','voice','usher']],[-48,-146,['usher','usher','usher','voice']],[50,-150,['hound','hound','usher','voice']],[-20,-190,['reaver','usher','voice']],[22,-196,['usher','usher','hound']],[-60,-216,['usher','voice','voice','hound']],[62,-224,['reaver','usher','usher']],[0,-244,['reaver','reaver','voice']],[-38,-262,['usher','hound','hound','voice']],[40,-266,['usher','usher','voice','voice']],[-14,-296,['reaver','usher','usher','hound']],[20,-304,['usher','voice','voice']],[0,-318,['usher','usher','hound','hound','voice']]];
 const SUPPLY=[[-12,40],[16,28],[-50,-4],[52,-6],[-8,-46],[10,-64],[-40,-84],[44,-90],[0,-116],[-56,-132],[58,-140],[-18,-176],[26,-198],[-48,-226],[50,-232],[0,-268],[-30,-300],[32,-310],[0,-326]];
 // ---------- the theatre in the architecture: foyer, orchestra pit, auditorium, fly loft ----------
@@ -548,8 +548,8 @@ function updEnemies(dt0){const sl=G.blue>0?.4:1,dt=dt0*sl;
     if(o.t<=0||(o.m.position.y<2.7&&blocked(o.m.position.x,o.m.position.z,.1))||o.m.position.y<0){burst(o.m.position,0xc79aff,6,3,.3);scene.remove(o.m);orbs.splice(i,1);}}}
 // ---------- HUD ----------
 const comp=$('comp'),tickEls=[];for(let a=0;a<360;a+=15){const t=document.createElement('div');t.className='t';t.textContent={0:'N',90:'E',180:'S',270:'W'}[a]||String(a).padStart(3,'0');t.dataset.a=a;comp.appendChild(t);tickEls.push(t);}
-const mEls=BELLS.map(b=>{const m=document.createElement('div');m.className='m';m.textContent=b.n;comp.appendChild(m);return m;});
-const wps=BELLS.map(b=>{const w=document.createElement('div');w.className='wp';w.innerHTML=`<span>${b.label}</span><i></i><em></em>`;$('wps').appendChild(w);return w;});
+const mEls=BELLS.map(b=>{const m=document.createElement('div');m.className='m';m.textContent=b.n==='A'?'T':b.n==='B'?'M':b.n;comp.appendChild(m);return m;});
+const wps=BELLS.map(b=>{const w=document.createElement('div');w.className='wp'+((b.n==='A'||b.n==='B')?' rec':'');w.innerHTML=`<span>${b.label}</span><i></i><em></em>`;$('wps').appendChild(w);return w;});
 $('vbar').innerHTML='<i></i>'.repeat(10);$('aT').innerHTML='<i></i>'.repeat(30);
 const BOSS_ORDER=['leviathan','kraken','conductor','impresario','warden'],BOSS_ACT={leviathan:'Act I',kraken:'Act II',conductor:'Act III',impresario:'Act III',warden:'Act IV'};
 $('oList').innerHTML=BOSS_ORDER.map(id=>`<li data-b="${id}"><i></i><span>${BOSSF[id].name}</span><small>${BOSS_ACT[id]}</small></li>`).join('');
@@ -557,12 +557,12 @@ $('squad').innerHTML=squad.map((s,i)=>`<div class="sq" data-i="${i}"><b>${i+1}</
 const sqEls=[...$('squad').children];
 const OBJ_TXT=['Find the singing Tuning Fork','Follow the echo to the old shrine','Confront the Abyssal Warden'];
 const angDiff=(a,b)=>{let d=a-b;while(d>180)d-=360;while(d<-180)d+=360;return d;};
-const act=b=>b.bid?!enemies.find(e=>e.type===b.bid).dead:(!b.done&&((b.n==='A'&&G.stage===0)||(b.n==='B'&&G.stage===1)));
+const act=b=>b.bid?!enemies.find(e=>e.type===b.bid).dead:!b.done;const showM=act,isRec=b=>b.n==='A'||b.n==='B';
 const mini=$('mini'),mc=mini.getContext('2d');
 function drawMini(){const S=160;mc.clearRect(0,0,S,S);mc.save();mc.beginPath();mc.arc(S/2,S/2,S/2-2,0,TAU);mc.clip();mc.fillStyle='rgba(6,8,12,.72)';mc.fillRect(0,0,S,S);const c=Math.cos(P.yaw),s=Math.sin(P.yaw),sc=S/2/95,tr=(x,z)=>{const dx=x-P.pos.x,dz=z-P.pos.z;return[S/2+(dx*c+dz*(-s))*sc,S/2-(dx*(-s)+dz*(-c))*sc];};
   for(const e of enemies){if(e.dead)continue;const [x,y]=tr(e.g.position.x,e.g.position.z);mc.fillStyle=e.state==='idle'?'rgba(255,90,68,.4)':'#ff5a44';mc.fillRect(x-1.5,y-1.5,3,3);}
   mc.fillStyle='#7ac8ff';for(const a of allies){if(a.dead)continue;const [x,y]=tr(a.g.position.x,a.g.position.z);mc.fillRect(x-1.5,y-1.5,3,3);}
-  for(const b of BELLS){if(!act(b))continue;let [x,y]=tr(b.x,b.z);const dx=x-S/2,dy=y-S/2,d=Math.hypot(dx,dy),mx=S/2-9;if(d>mx){x=S/2+dx/d*mx;y=S/2+dy/d*mx;}mc.save();mc.translate(x,y);mc.rotate(Math.PI/4);mc.strokeStyle='#e9b44c';mc.lineWidth=2;mc.strokeRect(-4,-4,8,8);mc.restore();}
+  for(const b of BELLS){if(!act(b))continue;let [x,y]=tr(b.x,b.z);const dx=x-S/2,dy=y-S/2,d=Math.hypot(dx,dy),mx=S/2-9;if(d>mx){x=S/2+dx/d*mx;y=S/2+dy/d*mx;}mc.save();mc.translate(x,y);if(isRec(b)){mc.strokeStyle='#5aff9a';mc.fillStyle='rgba(90,255,154,.35)';mc.lineWidth=2;mc.beginPath();mc.arc(0,0,5.5,0,TAU);mc.fill();mc.stroke();mc.fillStyle='#fff';mc.font='bold 8px sans-serif';mc.textAlign='center';mc.fillText(b.n==='A'?'T':'M',0,3);}else{mc.rotate(Math.PI/4);mc.strokeStyle='#e9b44c';mc.lineWidth=2;mc.strokeRect(-4,-4,8,8);}mc.restore();}
   mc.restore();mc.strokeStyle='rgba(233,180,76,.6)';mc.lineWidth=2;mc.beginPath();mc.arc(S/2,S/2,S/2-2,0,TAU);mc.stroke();mc.fillStyle='#fff';mc.beginPath();mc.moveTo(S/2,S/2-6);mc.lineTo(S/2+4,S/2+4);mc.lineTo(S/2-4,S/2+4);mc.fill();}
 function updHUD(){drawMini();let bt=null,bd=1e9;for(const e of enemies){if(e.B&&e.engaged&&!e.dead){const d=Math.hypot(e.g.position.x-P.pos.x,e.g.position.z-P.pos.z);if(d<bd){bd=d;bt=e;}}}
   const bx=$('boss');if(bt){bx.style.opacity=1;if(bx.dataset.id!==bt.type){bx.dataset.id=bt.type;$('bossT').textContent=bt.B.name;$('bossS').textContent=bt.B.sub;bx.style.setProperty('--bc',bt.B.col);}$('bossN').style.width=bt.hp/bt.max*100+'%';$('bossSh').style.width=Math.min(100,bt.shield/bt.max*500)+'%';$('bossH').textContent=Math.ceil(bt.hp)+' / '+bt.max+(bt.shield>0?'   ·   SHIELDED':'');}else bx.style.opacity=0;
@@ -834,7 +834,7 @@ function pollPad(dt){const gp=(navigator.getGamepads&&[...navigator.getGamepads(
  AX.st=dz(a[0]);AX.fw=-dz(a[1]);AX.lx=dz(a[2]);AX.ly=dz(a[3]);AX.sprint=b[10];
  if(G.state==='menu'||G.state==='pause'){if(pr(0)||pr(9))begin();}else if(G.state==='dead'||G.state==='won'){if(pr(0))retry();}
  else if(G.state==='play'){mouseDown=b[7]||touchFire;mouseR=b[6]||touchAds;if(b[7]&&!padPrev[7])P.edge=true;if(pr(2))reload();if(pr(4))useQ();if(pr(3))useX();if(pr(1))setView(!tpOn);if(pr(14)||pr(15)){const n=(P.cur+(pr(15)?1:3))%4;switchTo(n);}
-  if(pr(5))fireHook();if(!b[5]&&padPrev[5])releaseHook(false);if(pr(0)){padSpace=true;toggleGlide();}if(!b[0])padSpace=false;if(pr(9)){G.state='pause';$('pause').classList.remove('hide');}}
+  if(pr(5))fireHook();if(!b[5]&&padPrev[5])releaseHook(false);if(pr(0)){padSpace=true;toggleGlide();}if(!b[0])padSpace=false;if(pr(8))toggleBigMap();if(pr(9)){G.state='pause';$('pause').classList.remove('hide');}}
  for(let i=0;i<b.length;i++)padPrev[i]=b[i];}
 let padSpace=false,touchFire=false,touchAds=false,touchSpace=false;
 {const isT=('ontouchstart'in window)||(matchMedia&&matchMedia('(pointer:coarse)').matches);if(isT){const t=document.createElement('div');t.id='touch';t.innerHTML='<div id="tjoy"><i></i></div>';document.body.appendChild(t);
@@ -851,6 +851,27 @@ function bodyLang(r,dt){const p=r.pivot,t=G.t;const hurtK=clamp(P.hurtT/.5,0,1),
  p.rotation.x+=(-recoil*.06+hurtK*.18)*(1-r.lean);if(!P.dead){const sp=Math.hypot(P.vel.x,P.vel.z);if(sp<.5&&P.ground){p.position.y+=Math.sin(t*1.8)*.012;}}
  else{r.fall=Math.min(1,(r.fall||0)+dt*1.6);p.rotation.z=1.3*r.fall;}if(!P.dead)r.fall=0;
  }
+
+// ---------- the full map (M) and recruit markers ----------
+{const st=document.createElement('style');st.textContent=`.wp.rec{color:#5aff9a;font-weight:700;letter-spacing:.06em}.wp.rec i{border-color:#5aff9a;border-radius:50%;transform:none;box-shadow:0 0 10px #5aff9a}#bigmap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,6,10,.82);z-index:4}#bigmap.on{display:flex}#bigmap canvas{height:min(88vh,660px);width:auto;border:1px solid rgba(233,201,138,.5);background:#080b12}#bigmap .cap{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font:12px system-ui;letter-spacing:.14em;color:var(--mute)}`;document.head.appendChild(st);
+const bm=document.createElement('div');bm.id='bigmap';bm.innerHTML='<canvas width="360" height="644"></canvas><div class="cap">M or Esc · close the map</div>';document.body.appendChild(bm);
+const bc=bm.querySelector('canvas'),bx=bc.getContext('2d'),SX=360/(BX*2),SZ=644/(ZN-ZS),mx=x=>(x+BX)*SX,mz=z=>(z-ZS)*SZ;
+const ACTS=[['ACT I · THE FOYER',ZN,-60],['ACT II · THE ORCHESTRA PIT',-60,-168],['ACT III · THE AUDITORIUM',-168,-290],['ACT IV · THE STAGE',-290,ZS]];
+window.drawBigMap=function(){bx.clearRect(0,0,360,644);ACTS.forEach(([n,z0,z1],i)=>{bx.fillStyle=i%2?'rgba(233,201,138,.05)':'rgba(120,170,255,.06)';bx.fillRect(0,mz(z1),360,mz(z0)-mz(z1));bx.fillStyle='rgba(233,201,138,.55)';bx.font='bold 10px system-ui';bx.textAlign='left';bx.fillText(n,8,mz(z1)+14);bx.strokeStyle='rgba(233,201,138,.25)';bx.beginPath();bx.moveTo(0,mz(z1));bx.lineTo(360,mz(z1));bx.stroke();});
+ for(const e of enemies){if(e.dead||e.B)continue;bx.fillStyle=e.state==='idle'?'rgba(255,90,68,.4)':'#ff5a44';bx.fillRect(mx(e.g.position.x)-1.5,mz(e.g.position.z)-1.5,3,3);}
+ bx.fillStyle='#7ac8ff';for(const a of allies){if(a.dead)continue;bx.fillRect(mx(a.g.position.x)-1.5,mz(a.g.position.z)-1.5,3,3);}
+ const pulse=.5+.5*Math.sin(performance.now()/260);
+ for(const b of BELLS){const x=mx(b.x),y=mz(b.z);bx.textAlign='center';
+  if(isRec(b)){const who=b.n==='A'?'TOBIAS':'MIRELLE';if(b.done){bx.fillStyle='rgba(90,255,154,.5)';bx.font='10px system-ui';bx.fillText('✓ '+who+' recruited',x,y+4);continue;}
+   bx.strokeStyle='#5aff9a';bx.fillStyle='rgba(90,255,154,'+(.25+.25*pulse)+')';bx.lineWidth=2;bx.beginPath();bx.arc(x,y,9+4*pulse,0,TAU);bx.fill();bx.stroke();bx.fillStyle='#fff';bx.font='bold 11px system-ui';bx.fillText(b.n==='A'?'T':'M',x,y+4);bx.fillStyle='#5aff9a';bx.font='bold 11px system-ui';bx.fillText('RECRUIT '+who,x,y-17);bx.font='10px system-ui';bx.fillStyle='rgba(255,255,255,.8)';bx.fillText(b.n==='A'?'hold E at the fork':'hold E at the shrine',x,y+24);}
+  else{const dead=!act(b);bx.save();bx.translate(x,y);bx.rotate(Math.PI/4);bx.strokeStyle=dead?'#5a6a70':'#e9b44c';bx.lineWidth=2;bx.strokeRect(-6,-6,12,12);bx.restore();bx.fillStyle=dead?'#7a8a90':'#e9b44c';bx.font='bold 10px system-ui';bx.fillText((dead?'✓ ':'')+b.label,x,y-12);}}
+ bx.save();bx.translate(mx(P.pos.x),mz(P.pos.z));bx.rotate(-P.yaw);bx.fillStyle='#fff';bx.strokeStyle='#000';bx.lineWidth=1.5;bx.beginPath();bx.moveTo(0,-9);bx.lineTo(6,7);bx.lineTo(0,3);bx.lineTo(-6,7);bx.closePath();bx.fill();bx.stroke();bx.restore();};
+window.toggleBigMap=function(force){const on=force===undefined?!bm.classList.contains('on'):force;bm.classList.toggle('on',on);if(on)drawBigMap();};
+addEventListener('keydown',e=>{if(e.repeat)return;if(e.code==='KeyM'&&(G.state==='play'||bm.classList.contains('on')))toggleBigMap();else if(e.code==='Escape'&&bm.classList.contains('on'))toggleBigMap(false);});
+setInterval(()=>{if(bm.classList.contains('on'))drawBigMap();},100);
+setTimeout(()=>{if(!window.__recHint){window.__recHint=1;}},0);
+let hintShown=false;setInterval(()=>{if(G.state==='play'&&!hintShown&&G.t>14){hintShown=true;if(!squad[2].avail||!squad[3].avail)msg('Free Tobias at the Fork and Mirelle at the Shrine · press M for the map',5200);}},1000);
+}
 
 // ---------- camera + loop ----------
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();
