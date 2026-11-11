@@ -174,6 +174,7 @@ const FOES={
 };
 
 // ---------- real models: drop a .glb in 3d/models and list it in manifest.json (or drag a .glb onto the page) ----------
+const ownsSwim=()=>{try{const v=JSON.parse(localStorage.getItem('tidebound_v2'));return !!v&&v.skin==='tidepoolswim'&&(!v.lead||v.lead==='ondine');}catch(e){return false;}};
 const manifestP=fetch('models/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():{}).catch(()=>({}));
 const glbLoader=new GLTFLoader(),glbCache={},MODEL_H={ondine:2.35,caliste:2.35,maren:2.35,usher:2.0,hound:1.5,voice:2.7,reaver:3.4};
 async function loadGLB(url){if(!glbCache[url])glbCache[url]=glbLoader.loadAsync(url);const g=await glbCache[url];return {scene:SkeletonUtils.clone(g.scene),anims:g.animations};}
@@ -202,7 +203,7 @@ function mkUnit(def,id,team,pos,rotY){
   const b=def.build();const o=b.outer;o.position.copy(pos);o.rotation.y=rotY;if(def.sc)b.model.scale.setScalar(def.sc);scene.add(o);
   const u={id,def,name:def.name,team,hp:def.hp,max:def.hp,atk:def.atk,spd:def.spd,en:team==='h'?30:0,enMax:def.ult||0,shield:0,alive:true,obj:o,model:b.model,mats:b.mats,home:pos.clone(),rotHome:rotY,h:def.h||2.6,av:10000/def.spd,ph:Math.random()*6,el:def.el,weak:def.weak};
   const bar=document.createElement('div');bar.className='bar '+(team==='h'?'':'foe');bar.innerHTML=`<div class="n">${team==='f'?`<span class="dot ${def.weak}"></span>`:''}${def.name}</div><div class="hp"><i></i><span class="sh"></span></div>${team==='h'?'<div class="en"><i></i></div>':''}`;$('bars').appendChild(bar);u.bar=bar;
-  manifestP.then(m=>{if(m[id])applyGLB(u,m[id]);});
+  manifestP.then(m=>{if(m[id]&&(id!=='ondine'||ownsSwim()))applyGLB(u,m[id]);});
   if(team==='f'){o.userData.unit=u;o.traverse(m=>{m.userData.unit=u;});}
   return u;
 }

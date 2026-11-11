@@ -8855,7 +8855,7 @@ function paintThumb(cv, id) {
   const B = BANNERS[id]; if (!cv || !B) return;
   cv.width = 96; cv.height = 64;
   const c = cv.getContext('2d');
-  const wash = { shore: '#2a8ab8', cello: '#1c6b58', foam: '#1a6e8a', wardrobe: '#8a4060', livery: '#8a6a22', standard: '#2a4a86', bluehour: '#1a2460', whistle: '#146888', hour: '#1a2460', ringlight: '#c45a28' }[id] || '#243044';
+  const wash = { shore: '#2a8ab8', cello: '#1c6b58', foam: '#1a6e8a', wardrobe: '#8a4060', livery: '#8a6a22', standard: '#2a4a86', bluehour: '#1a2460', whistle: '#146888', hour: '#1a2460', ringlight: '#c45a28', tidepool: '#c4306a' }[id] || '#243044';
   c.fillStyle = wash; c.fillRect(0, 0, 96, 64);
   try {
     if (CONES[B.face]) { drawConeCard(c, 64, 34, 52, B.face, -0.18); }
@@ -19130,6 +19130,11 @@ document.addEventListener('click', e => {
   if (tdLocked(m) > 0) { e.stopImmediatePropagation(); e.preventDefault(); sfx('ui'); showToast('Not yet', 'Play a little more of the Story first', `${tdLocked(m)} more battle${tdLocked(m) > 1 ? 's' : ''}`); }
 }, true);
 
+
+// ================= Lady Ondine’s swimsuit: only from the box office, and the 3D war uses her swimsuit model when it is equipped =================
+SKINS.push({ id: 'tidepoolswim', name: 'Tidepool Bloom', cost: 0, summer: true, unlock: 'Only from the Tidepool Summer programme in the box office.', desc: 'Summer wear: a magenta one-piece with gold fastenings, a silver-lilac mane and a great pink bow. Worn by Lady Ondine in the 3D war.', coat: '#d4245e', torso: '#f06090', trim: '#ffd070', hair: '#c8c8e8', streak: '#ff90b0', hat: '#e8e0f0', band: '#ff5a90', bolt: '#ffc0d8', aura: '255,120,170' });
+SKIN5.tidepoolswim = 1;
+BANNERS.tidepool = { name: 'Tidepool Summer', ey: 'Costume programme', blurb: 'Lady Ondine’s summer swimsuit, Tidepool Bloom, is featured. Opening night is always the swimsuit. Equip it from the Dressing Room or the Characters page once it is yours, and she wears it in the Drowned Front.', face: 'tidepoolswim', up5: 'tidepoolswim', pool5: [], up4: null, pool4: ['midnight', 'sakura', 'seaside', 'lagoon'] };
 // ================= The Drowned Front: the 3D war pays out into the main game =================
 SKINS.push(
   { id: 'frontline', name: 'Front-Line Prima', cost: 0, unlock: 'Earned by defeating 200 of the drowned in the Drowned Front.', desc: 'A rain-darkened tailcoat of the company’s war years, with ember-gold braid.', coat: '#3a1a2a', torso: '#7a2a3c', trim: '#ffd070', hair: '#fff0e0', streak: '#ff7a5a', hat: '#1a0a10', band: '#ffb050', bolt: '#ffd9a0', aura: '255,170,90' },
