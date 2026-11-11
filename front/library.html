@@ -59,7 +59,7 @@ canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block}
 <div class="ov" id="start"><div class="card"><div class="eb">Tidebound Corridor · The Ink That Does Not Dry</div><h1>The Drowned Front · Chapter II</h1>
 <p>The Drowned Library has taken the harbour. Ink rises between its stacks, and the Kraken Matriarch files every voice she hears. Lead the company through the Lending Hall, the Stacks and the Reading Room, break the three Catalogue Seals, and silence the Matriarch in the Archive of Ink. Tobias and Mirelle are already with you.</p>
 <div class="keys"><b>W A S D</b><span>Move</span><b>Shift</b><span>Sprint</span><b>Space</b><span>Jump</span><b>Mouse / click</b><span>Fire</span><b>Right mouse</b><span>Aim down the scope</span><b>Wheel</b><span>Zoom the scope</span><b>F (hold)</b><span>Fire the fly-line and swing</span><b>Space (swinging)</b><span>Reel in</span><b>R</b><span>Reload (watch the magazine swap)</span><b>1 2 3 4</b><span>Switch company member</span><b>Q</b><span>Skill</span><b>X</b><span>Ultimate (charges as you fight)</span><b>V</b><span>Third person / first person</span><b>M</b><span>Open the full map</span><b>E (hold)</b><span>Free a captive</span><b>Arrow keys</b><span>Look, if the mouse is locked out</span></div>
-<div class="chsel"><a class="chb" href="index.html">Chapter I · The Quay</a><a class="chb cur" href="library.html">Chapter II · The Drowned Library</a></div><button class="btn" id="go">Click to begin</button><a href="../">← Back to the main menu</a></div></div>
+<div class="chsel"><a class="chb" href="index.html">Chapter I · The Quay</a><a class="chb cur" href="library.html">Chapter II · The Drowned Library</a><a class="chb" href="beach.html">The Whitecap Coast · Caliste &amp; Maren</a></div><button class="btn" id="go">Click to begin</button><a href="../">← Back to the main menu</a></div></div>
 <div class="ov hide" id="pause"><div class="card"><div class="eb">Paused</div><h1>Intermission</h1><button class="btn" id="resume">Resume</button><a href="../">← Back to the main menu</a></div></div>
 <div class="ov hide" id="end"><div class="card"><div class="eb" id="eEb"></div><h1 id="eH"></h1><p id="eP"></p><div class="stats" id="eS"></div><button class="btn" onclick="location.reload()">Again</button><a href="../">← Back to the main menu</a></div></div>
 <script type="module">
@@ -115,11 +115,14 @@ const contMats=CCOL.map(([a,b],ci)=>{const side=ctex(512,256,(x,w,h)=>{const g=x
   return [M(side),M(side),M(roof,{bumpScale:.3}),M(roof,{bumpScale:.3}),M(end),M(end)];});
 // ---------- Chapter II: the Drowned Library ----------
 const BX=112,ZN=64,ZS=-352,CS=12;
-const LIB_ACTZ=[-62,-170,-262];
-const LIB_ACTN=['ACT I · THE LENDING HALL · Port Highwater','ACT II · THE STACKS · The Drowned Library','ACT III · THE READING ROOM · The Drowned Library','ACT IV · THE ARCHIVE OF INK · The Drowned Library'];
-const LIB_OBJ=[{id:'seal1',name:'Break the First Catalogue Seal',act:'Act II'},{id:'seal2',name:'Break the Second Catalogue Seal',act:'Act III'},{id:'seal3',name:'Break the Third Catalogue Seal',act:'Act III'},{id:'kraken',name:'The Drowned Kraken Matriarch',act:'Act IV'}];
-const LIB_WIN=['Unfiled','The Matriarch falls','The Drowned Kraken Matriarch has fallen, the ink has lost its words, and Verrine’s fork rings free. Two voices are free. Your rewards are waiting in the main menu.'];
-const LIB_CKP=[[0,56],[0,-72],[0,-182],[0,-272]];
+const MAPX_DEF={chapter:2,squad:['ondine','tobias','mirelle'],allAvail:true,tint:0xb8a4ff,lockBoss:'kraken',noRain:true,warColor:0x9a78ff,bosses:['kraken'],
+ boss:{kraken:{x:0,z:-312,hp:14000,sub:'She catalogues every voice she hears',intro:['The Kraken Matriarch','HUSH. THIS IS A LIBRARY. EVERY VOICE HAS A SHELF.','#d49aff'],down:['Verrine','The note has ended. I can breathe. Isolde… oh, Isolde.','#a8d0ff']}},
+ names:{usher:'Ink Scribe',hound:'Quill Hound',voice:'Ink Siren',reaver:'Tome Reaver'},
+ obj:[{id:'seal1',name:'Break the First Catalogue Seal',act:'Act II'},{id:'seal2',name:'Break the Second Catalogue Seal',act:'Act III'},{id:'seal3',name:'Break the Third Catalogue Seal',act:'Act III'},{id:'kraken',name:'The Drowned Kraken Matriarch',act:'Act IV'}],
+ actz:[-62,-170,-262],actn:['ACT I · THE LENDING HALL · Port Highwater','ACT II · THE STACKS · The Drowned Library','ACT III · THE READING ROOM · The Drowned Library','ACT IV · THE ARCHIVE OF INK · The Drowned Library'],
+ win:['Unfiled','The Matriarch falls','The Drowned Kraken Matriarch has fallen, the ink has lost its words, and Verrine\u2019s fork rings free. Two voices are free. Your rewards are waiting in the main menu.'],
+ ckp:[[0,56],[0,-72],[0,-182],[0,-272]],
+ intro:['Isolde','The Library is cataloguing everyone. Break the three Catalogue Seals, and the Matriarch can be struck.','#e2d0ff']};
 const solids=[],colliders=[],world=new THREE.Group();scene.add(world);const grid=new Map();
 function gridAdd(c){for(let gx=Math.floor(c.x0/CS);gx<=Math.floor(c.x1/CS);gx++)for(let gz=Math.floor(c.z0/CS);gz<=Math.floor(c.z1/CS);gz++){const k=gx+','+gz;let a=grid.get(k);if(!a){a=[];grid.set(k,a);}a.push(c);}}
 function addColBox(x0,x1,z0,z1,h,extra){const c=Object.assign({x0,x1,z0,z1,h},extra||{});colliders.push(c);gridAdd(c);return c;}
@@ -222,6 +225,8 @@ function tone(fq,d,v,type='sine',slide=0){if(!AC)return;const o=AC.createOscilla
 const sfx={shot:()=>{noise(.2,2400,.5);tone(120,.14,.5,'sine',-80);},click:()=>tone(900,.04,.15,'square'),reload:()=>{tone(300,.08,.15,'square');setTimeout(()=>tone(520,.08,.15,'square'),900);},hit:()=>tone(1400,.05,.12,'sine'),hurt:()=>{noise(.2,600,.5);tone(90,.2,.4,'sine',-40);},
  step:()=>noise(.07,900,.06,'bandpass',.8),bell:()=>{[196,294,392,588].forEach((f,i)=>tone(f,3.2,.14/(i+1),'sine'));},pick:()=>{tone(660,.08,.15);setTimeout(()=>tone(990,.1,.15),70);},growl:()=>tone(70,.4,.25,'sawtooth',-20)};
 // ---------- the company ----------
+const MAPX=typeof MAPX_DEF!=='undefined'?MAPX_DEF:{};
+const SQUAD_IDS=MAPX.squad||['ondine','tobias','mirelle'],ix=id=>SQUAD_IDS.indexOf(id);
 const CAST={
  ondine:{name:'Lady Ondine',short:'Ondine',role:'Soloist',col:'#5ad8ff',hp:100,speed:1,
    w:{name:'Riptide Carbine',mag:30,res:150,rate:10.5,dmg:22,auto:true,spread:.006,body:0x2b2d31,acc:0x4aa8ff,len:1,head:2,reload:1.8,scope:'acog',zmin:2,zmax:4,z0:3,overlay:true},q:{name:'Riptide Waltz',cd:10,desc:'A sonic wave that hurls the drowned back'},x:{name:'Grand Finale',desc:'A nova that strikes every foe near you'}},
@@ -231,28 +236,32 @@ const CAST={
    w:{name:'Stage-Rigger LMG',mag:60,res:240,rate:11.5,dmg:15,auto:true,spread:.012,body:0x4a4a38,acc:0xd08a3a,len:1.05,head:1.8,reload:2.9,drum:true,scope:'reflex',zmin:1.5,zmax:2.4,z0:1.8,overlay:false},q:{name:'Raise the Flats',cd:14,desc:'A painted flat rises as cover and blocks the foes’ shots'},x:{name:'Iron Curtain',desc:'The whole company takes far less damage for a while'}},
  mirelle:{name:'Mirelle',short:'Mirelle',role:'Drowned Chorister · medic',col:'#c79aff',hp:105,speed:1.02,
    w:{name:'Low Hymn PDW',mag:24,res:144,rate:15,dmg:10.5,auto:true,spread:.01,body:0x2c3f3d,acc:0xc79aff,len:.72,head:1.8,reload:1.5,scope:'reflex',zmin:1.3,zmax:2,z0:1.5,overlay:false},q:{name:'Tidal Psalm',cd:16,desc:'Heals the whole company'},x:{name:'Drowned Grace',desc:'Raises the fallen and heals everyone'}}
+ ,maren:{name:'Maren Quill',short:'Maren',role:'Ultimate · the shore whistle',col:'#2ec4b6',hp:125,speed:1.12,
+   w:{name:'Whitecap Spray',mag:40,res:240,rate:14,dmg:11.5,auto:true,spread:.014,body:0xe8eef2,acc:0x2ec4b6,len:.8,head:1.8,reload:1.6,scope:'reflex',zmin:1.3,zmax:2.2,z0:1.5,overlay:false},q:{name:'Life Ring',cd:14,desc:'A teal ring heals the company and shields it for a few seconds'},x:{name:'Whitecap',desc:'A breaking wave sweeps every foe in front of you'}}
 };
-const squad=['ondine','caliste','tobias','mirelle'].map(id=>({id,def:CAST[id],hp:CAST[id].hp,max:CAST[id].hp,mag:CAST[id].w.mag,res:CAST[id].w.res*2,ult:id==='ondine'?35:0,qcd:0,down:false,zoom:CAST[id].w.z0,avail:id==='ondine'||id==='caliste'}));
+const squad=SQUAD_IDS.map((id,i)=>({id,def:CAST[id],hp:CAST[id].hp,max:CAST[id].hp,mag:CAST[id].w.mag,res:CAST[id].w.res*2,ult:i===0?35:0,qcd:0,down:false,zoom:CAST[id].w.z0,avail:i===0||!!MAPX.allAvail}));
+const squadOf=id=>squad[ix(id)];
 const P={hook:{on:false,a:new THREE.Vector3(),len:0,cd:0},glide:0,hookable:false,ads:0,rp:0,relDur:1,pos:new THREE.Vector3(0,0,54),vel:new THREE.Vector3(),yaw:0,pitch:0,cur:0,ground:true,reload:0,cd:0,bob:0,kick:0,hurtT:0,lastHurt:-99,step:0,dead:false,swap:0,edge:false};
+if(MAPX.start)P.pos.set(MAPX.start[0],0,MAPX.start[1]);
 const H=()=>squad[P.cur],W=()=>H().def.w;
 for(const k of['hp','mag','res'])Object.defineProperty(P,k,{get(){return H()[k]},set(v){H()[k]=v}});
 const G={act:-1,state:'menu',t:0,kills:0,shots:0,hits:0,stage:0,done:false,blue:0,guard:0,skillsUsed:0};
 const keys={};
-addEventListener('keydown',e=>{keys[e.code]=true;if(G.state!=='play')return;if(e.code==='KeyR')reload();else if(e.code==='KeyF')fireHook();else if(e.code==='KeyQ')useQ();else if(e.code==='KeyX')useX();else if(e.code.startsWith('Digit')){const n=+e.code.slice(5)-1;if(n>=0&&n<4)switchTo(n);}if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();});
+addEventListener('keydown',e=>{keys[e.code]=true;if(G.state!=='play')return;if(e.code==='KeyR')reload();else if(e.code==='KeyF')fireHook();else if(e.code==='KeyQ')useQ();else if(e.code==='KeyX')useX();else if(e.code.startsWith('Digit')){const n=+e.code.slice(5)-1;if(n>=0&&n<squad.length)switchTo(n);}if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();});
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyF')releaseHook(false);});
 let mouseDown=false,mouseR=false,locked=false;addEventListener('mousedown',e=>{if(G.state!=='play')return;if(e.button===0){mouseDown=true;P.edge=true;}if(e.button===2)mouseR=true;});addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)mouseR=false;});addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(G.state!=='play')return;const h=H(),w=W();h.zoom=clamp(h.zoom*(e.deltaY<0?1.14:1/1.14),w.zmin,w.zmax);},{passive:true});
 const sens=()=>.0021*ST.sens/Math.pow(1+(H().zoom-1)*P.ads,.9);
 addEventListener('mousemove',e=>{if(!locked||G.state!=='play')return;P.yaw-=e.movementX*sens();P.pitch=clamp(P.pitch-e.movementY*sens()*(ST.invY?-1:1),-1.5,1.5);});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===cv;if(!locked&&G.state==='play'&&!P.dead&&!G.done){G.state='pause';$('pause').classList.remove('hide');}});
-function begin(){audio();musInit();applySettings();if(AC&&AC.state==='suspended')AC.resume();$('start').classList.add('hide');$('pause').classList.add('hide');const first=G.t===0;G.state='play';try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}if(first){setTimeout(()=>(typeof LIB_OBJ!=='undefined'?say('Isolde','The Library is cataloguing everyone. Break the three Catalogue Seals, and the Matriarch can be struck.','#e2d0ff',6500):say('Madame Coralie','Ondine, the aqueduct is singing again. Find the Tuning Fork, and see who the song has caged.','#e9c98a',6500)),600);}}
+function begin(){audio();musInit();applySettings();if(AC&&AC.state==='suspended')AC.resume();$('start').classList.add('hide');$('pause').classList.add('hide');const first=G.t===0;G.state='play';try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}if(first){setTimeout(()=>say(...(MAPX.intro||['Madame Coralie','Ondine, the aqueduct is singing again. Find the Tuning Fork, and see who the song has caged.','#e9c98a']),6500),600);}}
 $('go').onclick=begin;$('resume').onclick=begin;
 // ---------- the weapon in your hands ----------
 const vm=new THREE.Group();camera.add(vm);vm.position.set(.21,-.23,-.52);let gunG=null,armsG=null,gunHolder=vm,tpOn=true,gunMag=null;const debris=[];
 const flash=new THREE.Mesh(new THREE.PlaneGeometry(.26,.26),new THREE.MeshBasicMaterial({map:dotTex,color:0xffd890,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));vm.add(flash);
 const flashL=new THREE.PointLight(0xffc070,0,9,2);vm.add(flashL);
 const gloveM=new THREE.MeshStandardMaterial({color:0x4d5238,roughness:.85,envMapIntensity:.5});
-const SKIN_FPS={ondine:'#e2ae96',caliste:'#c8946c',tobias:'#dcb090',mirelle:'#cfe4ea'};
+const SKIN_FPS={ondine:'#e2ae96',caliste:'#c8946c',tobias:'#dcb090',mirelle:'#cfe4ea',maren:'#f0c4a8'};
 function buildGun(w){gloveM.color.set(SKIN_FPS[H().id]||'#e2ae96');gloveM.roughness=.6;if(gunG)gunHolder.remove(gunG);gunG=new THREE.Group();gunHolder.add(gunG);armsG=new THREE.Group();gunG.add(armsG);const L=w.len,Bx=(a,b,c)=>new THREE.BoxGeometry(a,b,c);
   const gm=new THREE.MeshStandardMaterial({color:w.body,metalness:.85,roughness:.42,envMapIntensity:1.2}),gm2=new THREE.MeshStandardMaterial({color:0x17181b,metalness:.6,roughness:.55,envMapIntensity:1}),am=new THREE.MeshStandardMaterial({color:w.acc,metalness:1,roughness:.3,envMapIntensity:1.6,emissive:w.acc,emissiveIntensity:.15});
   const part=(geo,mat,x,y,z,rx=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.x=rx;m.frustumCulled=false;gunG.add(m);return m;};
@@ -300,10 +309,10 @@ const BOSSF={
    intro:['The Hollow Leviathan','…','#5ad8ff'],down:['Madame Coralie','The shallows sing again. Thank you, my dears.','#e9c98a']},
  impresario:{name:'The Crimson Impresario',sub:'Master of the Last House',hp:11000,spd:1.8,col:'#ffd070',x:-34,z:-268,keep:15,pat:['shields','teleport','volley','wall','aimed'],
    intro:['The Crimson Impresario','The house is full tonight. Every seat is yours.','#ffd070'],down:['Lady Ondine','The final curtain. And it is ours to lower.','#5ad8ff']}};
-if(typeof LIB_OBJ!=='undefined'){for(const k of Object.keys(BOSSF))if(k!=='kraken')delete BOSSF[k];Object.assign(BOSSF.kraken,{x:0,z:-312,hp:14000,sub:'She catalogues every voice she hears',intro:['The Kraken Matriarch','HUSH. THIS IS A LIBRARY. EVERY VOICE HAS A SHELF.','#d49aff'],down:['Verrine','The note has ended. I can breathe. Isolde… oh, Isolde.','#a8d0ff']});}
+if(MAPX.bosses){for(const k of Object.keys(BOSSF))if(!MAPX.bosses.includes(k))delete BOSSF[k];}for(const [k,v] of Object.entries(MAPX.boss||{}))if(BOSSF[k])Object.assign(BOSSF[k],v);
 for(const [id,B] of Object.entries(BOSSF)){const h=SPR[id].h;ES[id]={hp:B.hp,spd:B.spd,dmg:0,r:Math.max(1.1,h*.1),hh:h,cd:2,name:B.name,boss:1};}
 const enemies=[],stdM=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.7,metalness:.1,envMapIntensity:.6},o));
-function foe(type,x,z){const D=ES[type],S0=SPR[type],g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({map:S0.tex,color:(typeof LIB_OBJ!=='undefined'?0xb8a4ff:0xffffff),alphaTest:.4,transparent:true,roughness:1,metalness:0,side:THREE.DoubleSide,envMapIntensity:.5,emissive:0x000000,emissiveIntensity:1});mat.userData.e0=0;
+function foe(type,x,z){const D=ES[type],S0=SPR[type],g=new THREE.Group(),mat=new THREE.MeshStandardMaterial({map:S0.tex,color:(MAPX.tint||0xffffff),alphaTest:.4,transparent:true,roughness:1,metalness:0,side:THREE.DoubleSide,envMapIntensity:.5,emissive:0x000000,emissiveIntensity:1});mat.userData.e0=0;
   const sp=new THREE.Mesh(new THREE.PlaneGeometry(S0.h*S0.asp,S0.h),mat);sp.position.y=S0.h/2+(S0.float||0);sp.castShadow=true;if(S0.depth)sp.customDepthMaterial=S0.depth;g.add(sp);
   let bell=null;if(type==='warden'){bell=new THREE.Group();bell.position.set(2.3,1.2,.4);g.add(bell);const bm=new THREE.MeshStandardMaterial({color:0xc79a46,metalness:1,roughness:.32,side:THREE.DoubleSide,envMapIntensity:1.6});const b2=new THREE.Mesh(new THREE.LatheGeometry([[.05,1],[.2,.95],[.34,.75],[.42,.45],[.5,.15],[.62,-.1],[.68,-.2],[.6,-.24],[.02,-.22]].map(([a,b])=>new THREE.Vector2(a,b)),24),bm);b2.scale.setScalar(1);b2.castShadow=true;bell.add(b2);const ch=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,2.6,6),new THREE.MeshStandardMaterial({color:0x2a2c30}));ch.position.y=1.3;bell.add(ch);}
   g.position.set(x,0,z);scene.add(g);
@@ -354,7 +363,7 @@ function nearFoes(r,fn){for(const e of enemies){if(e.dead)continue;const dx=e.g.
 function knock(e,dx,dz,d,m){if(e.D.boss)return;const k=m/Math.max(.3,d);e.g.position.x+=dx*k;e.g.position.z+=dz*k;pushOut(e.g.position,e.D.r);e.cd=Math.max(e.cd,1.1);}
 function boom(r,col){ringFx(P.pos,col,.5,r,.55);ringFx(P.pos,0xffffff,.3,r*.6,.4,.3);}
 const SK={
- ondine:{q(){const r0=rigs[0];if(tpOn&&P.cur===0&&r0&&r0.mixer&&r0.clip&&r0.kick<=0){playKick(r0);msg('RIPTIDE WALTZ',1100);setLater(.5,()=>SK.ondine.q2());return;}SK.ondine.q2();},
+ ondine:{q(){const r0=rigs[ix('ondine')];if(tpOn&&P.cur===ix('ondine')&&r0&&r0.mixer&&r0.clip&&r0.kick<=0){playKick(r0);msg('RIPTIDE WALTZ',1100);setLater(.5,()=>SK.ondine.q2());return;}SK.ondine.q2();},
   q2(){const f=camFwd();f.y=0;f.normalize();let hit=0;nearFoes(10,(e,dx,dz,d)=>{const dir=new THREE.Vector3(dx,0,dz).normalize();if(dir.dot(f)>.55){hitEnemy(e,75,false,e.g.position.clone().add(new THREE.Vector3(0,1,0)),true);knock(e,dx,dz,d,5);hit++;}});ringFx(P.pos.clone().addScaledVector(f,3),0x5ad8ff,.5,7,.5);ringFx(P.pos.clone().addScaledVector(f,5),0x9ae8ff,.5,9,.5);burst(eye().addScaledVector(f,3),0x5ad8ff,40,10,.6,0,f);shake=.5;sfx.wave();msg('RIPTIDE WALTZ',1100);},
   x(){boom(18,0x5ad8ff);nearFoes(18,(e,dx,dz,d)=>{hitEnemy(e,e.D.boss?260:230,false,e.g.position.clone().add(new THREE.Vector3(0,1.2,0)),true);knock(e,dx,dz,d,6);});burst(eye(),0x5ad8ff,120,16,1,2);whiteFlash(.6);shake=1;sfx.ult();msg('GRAND FINALE',1600);}},
  caliste:{q(){const o=tpOn?camera.position.clone():eye(),d=camFwd();ray.set(o,d);ray.far=70;const wh=ray.intersectObjects(solids,false)[0],L=wh?wh.distance:70,end=o.clone().addScaledVector(d,L);
@@ -366,7 +375,9 @@ const SK={
     for(const e of enemies){if(!e.dead){const dx=e.g.position.x-c.x,dz=e.g.position.z-c.z;if(Math.hypot(dx,dz)<2.4)knock(e,dx,dz,Math.hypot(dx,dz),3);}}burst(c.clone().setY(1),0xd08a3a,40,5,.7);shake=.4;sfx.wave();msg('RAISE THE FLATS',1100);},
   x(){G.guard=9;$('tint').style.background='radial-gradient(ellipse at center,rgba(255,170,60,.0) 35%,rgba(255,160,40,.4) 100%)';$('tint').style.opacity=1;for(const h of squad)if(h.avail&&!h.down)h.hp=Math.min(h.max,h.hp+25);boom(7,0xd08a3a);whiteFlash(.3);sfx.ult();msg('IRON CURTAIN',1600);}},
  mirelle:{q(){for(const h of squad)if(h.avail&&!h.down)h.hp=Math.min(h.max,h.hp+30);ringFx(P.pos,0x8affb0,.5,9,.9);ringFx(P.pos,0xc79aff,.5,6,.7,.2);burst(eye(),0x8affb0,50,3,1.2,-1);sfx.heal();msg('TIDAL PSALM',1100);},
-  x(){let n=0;for(const h of squad)if(h.avail){if(h.down){h.down=false;h.hp=h.max*.5;n++;}else h.hp=Math.min(h.max,h.hp+h.max*.5);}ringFx(P.pos,0x8affb0,.5,16,1.1);ringFx(P.pos,0xc79aff,.5,12,.9,.25);burst(eye(),0xc79aff,90,6,1.4,-1);whiteFlash(.35);sfx.ult();msg(n?'THE FALLEN RISE':'DROWNED GRACE',1600);}}
+  x(){let n=0;for(const h of squad)if(h.avail){if(h.down){h.down=false;h.hp=h.max*.5;n++;}else h.hp=Math.min(h.max,h.hp+h.max*.5);}ringFx(P.pos,0x8affb0,.5,16,1.1);ringFx(P.pos,0xc79aff,.5,12,.9,.25);burst(eye(),0xc79aff,90,6,1.4,-1);whiteFlash(.35);sfx.ult();msg(n?'THE FALLEN RISE':'DROWNED GRACE',1600);}},
+ maren:{q(){for(const h of squad)if(h.avail&&!h.down)h.hp=Math.min(h.max,h.hp+25);G.guard=Math.max(G.guard,6);$('tint').style.background='radial-gradient(ellipse at center,rgba(46,196,182,.0) 40%,rgba(46,196,182,.35) 100%)';$('tint').style.opacity=1;ringFx(P.pos,0x2ec4b6,.5,8,.9);ringFx(P.pos,0xffffff,.4,5,.7,.2);burst(eye(),0x7ee0f0,50,4,1,-1);sfx.heal();msg('LIFE RING',1100);},
+  x(){const f=camFwd();f.y=0;f.normalize();let hit=0;nearFoes(30,(e,dx,dz,d)=>{const dir=new THREE.Vector3(dx,0,dz).normalize();if(dir.dot(f)>.35){hitEnemy(e,e.D.boss?240:200,false,e.g.position.clone().add(new THREE.Vector3(0,1.2,0)),true);knock(e,dx,dz,d,10);hit++;}});for(const k of[4,10,17,24])ringFx(P.pos.clone().addScaledVector(f,k),k%8?0x7ee0f0:0xffffff,.5,6+k*.35,.6);burst(eye().addScaledVector(f,6),0x7ee0f0,140,18,1,2,f);whiteFlash(.45);shake=.9;sfx.ult();msg('WHITECAP',1600);}}
 };
 function hurt(dmg,from){if(P.dead||G.done)return;dmg*=(G.guard>0?.4:1)*DIFF[ST.diff].inc;const h=H();h.hp-=dmg;P.lastHurt=G.t;P.hurtT=.5;sfx.hurt();shake=.4;
   const dx=from.x-P.pos.x,dz=from.z-P.pos.z,ang=Math.atan2(dx,-dz)-(-P.yaw),hu=$('hurt');hu.style.transform=`rotate(${ang*180/Math.PI}deg)`;hu.style.opacity=1;
@@ -374,7 +385,7 @@ function hurt(dmg,from){if(P.dead||G.done)return;dmg*=(G.guard>0?.4:1)*DIFF[ST.d
 let shake=0;
 const stats=()=>`<div><span>Drowned</span>${G.kills}</div><div><span>Accuracy</span>${G.shots?Math.round(G.hits/G.shots*100):0}%</div><div><span>Skills</span>${G.skillsUsed}</div><div><span>Time</span>${Math.floor(G.t/60)}:${String(Math.floor(G.t%60)).padStart(2,'0')}</div>`;
 function die(){P.dead=true;refreshRigs();writeDispatch();G.state='dead';document.exitPointerLock&&document.exitPointerLock();$('eEb').textContent='The tide takes the company';$('eH').textContent='Overrun';$('eP').textContent='The drowned answered every note. Regroup, and try a different order of skills.';$('eS').innerHTML=stats();setTimeout(()=>$('end').classList.remove('hide'),900);}
-function win(){G.done=true;RUN.clear=true;writeDispatch();G.state='won';document.exitPointerLock&&document.exitPointerLock();{const W2=typeof LIB_WIN!=='undefined'?LIB_WIN:['Curtain call','Every boss defeated','The Leviathan, the Kraken, the Conductor, the Impresario and the Warden have all fallen. Something below the Cathedral is waking. Your rewards are waiting in the main menu.'];$('eEb').textContent=W2[0];$('eH').textContent=W2[1];$('eP').textContent=W2[2];$('eS').innerHTML=stats();setTimeout(()=>$('end').classList.remove('hide'),600);}}
+function win(){G.done=true;RUN.clear=true;writeDispatch();G.state='won';document.exitPointerLock&&document.exitPointerLock();{const W2=MAPX.win||['Curtain call','Every boss defeated','The Leviathan, the Kraken, the Conductor, the Impresario and the Warden have all fallen. Something below the Cathedral is waking. Your rewards are waiting in the main menu.'];$('eEb').textContent=W2[0];$('eH').textContent=W2[1];$('eP').textContent=W2[2];$('eS').innerHTML=stats();setTimeout(()=>$('end').classList.remove('hide'),600);}}
 function msg(t,ms=2600){const m=$('msg');m.textContent=t;m.style.opacity=1;clearTimeout(msg.t);msg.t=setTimeout(()=>m.style.opacity=0,ms);}
 function say(who,text,col='#e9c98a',ms=5200){const s=$('sub');s.innerHTML=`<b style="color:${col}">${who}</b> ${text}`;s.style.opacity=1;clearTimeout(say.t);say.t=setTimeout(()=>s.style.opacity=0,ms);}
 function whiteFlash(a=.6){const f=$('flash');f.style.transition='none';f.style.opacity=a;requestAnimationFrame(()=>{f.style.transition='opacity .6s';f.style.opacity=0;});}
@@ -385,7 +396,7 @@ const slamMark=new THREE.Mesh(new THREE.RingGeometry(4.6,5.2,48),new THREE.MeshB
 const slamFill=new THREE.Mesh(new THREE.CircleGeometry(5.2,40),new THREE.MeshBasicMaterial({color:0xff3a2a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));slamFill.rotation.x=-Math.PI/2;slamFill.position.y=.07;scene.add(slamFill);
 // ---------- rewards: this run is written into the main game's save, which pays it out the next time the menu opens ----------
 const RUN={id:'r'+Date.now()+Math.floor(Math.random()*1e6),bosses:[],clear:false,last:''};
-function writeDispatch(){try{const raw=localStorage.getItem('tidebound_v2'),sv=raw?JSON.parse(raw):{},inbox=sv.frontInbox||(sv.frontInbox=[]),d={id:RUN.id,kills:G.kills,bosses:RUN.bosses.slice(),clear:RUN.clear,time:Math.round(G.t),ts:Date.now(),chapter:(typeof LIB_OBJ!=='undefined'?2:1)},sig=JSON.stringify([d.kills,d.bosses,d.clear]);if(sig===RUN.last)return;RUN.last=sig;
+function writeDispatch(){try{const raw=localStorage.getItem('tidebound_v2'),sv=raw?JSON.parse(raw):{},inbox=sv.frontInbox||(sv.frontInbox=[]),d={id:RUN.id,kills:G.kills,bosses:RUN.bosses.slice(),clear:RUN.clear,time:Math.round(G.t),ts:Date.now(),chapter:(MAPX.chapter||1)},sig=JSON.stringify([d.kills,d.bosses,d.clear]);if(sig===RUN.last)return;RUN.last=sig;
     const i=inbox.findIndex(x=>x.id===RUN.id);if(i>=0)inbox[i]=d;else inbox.push(d);if(inbox.length>12)inbox.splice(0,inbox.length-12);localStorage.setItem('tidebound_v2',JSON.stringify(sv));}catch(e){}}
 setInterval(()=>{if(G.state==='play'||G.state==='pause')writeDispatch();},15000);addEventListener('pagehide',writeDispatch);document.addEventListener('visibilitychange',()=>{if(document.hidden)writeDispatch();});
 
@@ -421,8 +432,8 @@ function bossAI(e,dt){const B=e.B,g=e.g,D=e.D,H0=SPR[e.type].h,to=_f.set(P.pos.x
   else if(a.k==='teleport'){if(a.t>.4&&!a.f){a.f=1;ringFx(g.position,col,1,7,.5);const an=rr(0,TAU),r=rr(11,17);let nx=P.pos.x+Math.cos(an)*r,nz=P.pos.z+Math.sin(an)*r;nx=clamp(nx,-BX+8,BX-8);nz=clamp(nz,ZS+12,ZN-8);g.position.set(nx,0,nz);ringFx(g.position,col,1,7,.5);burst(g.position.clone().setY(2),col,50,8,.7);sfx.hit();e.act={k:'aimed',t:0};}}
   else if(a.k==='charge'){chargeM.visible=true;chargeM.rotation.y=Math.atan2(dirv.x,dirv.z);chargeM.position.set(g.position.x+dirv.x*20,.09,g.position.z+dirv.z*20);chargeM.material.opacity=.3+Math.sin(a.t*16)*.15;if(a.t>1.3){chargeM.visible=false;e.rush={d:dirv.clone(),t:.9,hit:false};e.act=null;msg(B.name+' charges',900);sfx.growl();}}
   else e.act=null;}
-for(const id in BOSSF){const B=BOSSF[id];const eb=foe(id,B.x,B.z);if(typeof LIB_OBJ!=='undefined')eb.lock=true;}
-if(typeof LIB_OBJ!=='undefined'){ES.usher.name='Ink Scribe';ES.hound.name='Quill Hound';ES.voice.name='Ink Siren';ES.reaver.name='Tome Reaver';rain.visible=false;squad.forEach(s=>{s.avail=true;});}
+for(const id in BOSSF){const B=BOSSF[id];const eb=foe(id,B.x,B.z);if(MAPX.lockBoss===id)eb.lock=true;}
+if(MAPX.names)for(const [k,v] of Object.entries(MAPX.names))ES[k].name=v;if(MAPX.noRain)rain.visible=false;if(MAPX.allAvail)squad.forEach(s=>{s.avail=true;});
 
 const WARDEN=enemies.find(e=>e.type==='warden');
 // ---------- allies: the company's chorus line fights beside you ----------
@@ -463,8 +474,8 @@ const comp=$('comp'),tickEls=[];for(let a=0;a<360;a+=15){const t=document.create
 const mEls=BELLS.map(b=>{const m=document.createElement('div');m.className='m';m.textContent=b.letter||b.n;comp.appendChild(m);return m;});
 const wps=BELLS.map(b=>{const w=document.createElement('div');w.className='wp'+(b.who?' rec':'');w.innerHTML=`<span>${b.label}</span><i></i><em></em>`;$('wps').appendChild(w);return w;});
 $('vbar').innerHTML='<i></i>'.repeat(10);$('aT').innerHTML='<i></i>'.repeat(30);
-const BOSS_ORDER=['leviathan','kraken','conductor','impresario','warden'],BOSS_ACT={leviathan:'Act I',kraken:'Act II',conductor:'Act III',impresario:'Act III',warden:'Act IV'};
-const OBJ_ITEMS=typeof LIB_OBJ!=='undefined'?LIB_OBJ:BOSS_ORDER.map(id=>({id,name:BOSSF[id].name,act:BOSS_ACT[id]}));
+const BOSS_ORDER=MAPX.order||['leviathan','kraken','conductor','impresario','warden'],BOSS_ACT=Object.assign({leviathan:'Act I',kraken:'Act II',conductor:'Act III',impresario:'Act III',warden:'Act IV'},MAPX.bossAct||{});
+const OBJ_ITEMS=MAPX.obj||BOSS_ORDER.map(id=>({id,name:BOSSF[id].name,act:BOSS_ACT[id]}));
 const objDone=id=>{if(id.startsWith('seal')){const b=BELLS.find(x=>x.sealId===id);return !!(b&&b.done);}return enemies.find(e=>e.type===id).dead;};
 const sealsLeft=()=>BELLS.filter(b=>b.seal&&!b.done).length;
 $('oList').innerHTML=OBJ_ITEMS.map(it=>`<li data-b="${it.id}"><i></i><span>${it.name}</span><small>${it.act}</small></li>`).join('');
@@ -492,9 +503,9 @@ const heading=((-P.yaw*180/Math.PI)%360+360)%360,ppd=3.5;
   $('qN').textContent=h.def.q.name;$('qC').textContent=h.qcd>0?Math.ceil(h.qcd)+'s':'READY';$('qC').className=h.qcd>0?'cd':'rdy';$('xN').textContent=h.def.x.name;$('xC').textContent=h.ult>=100?'READY':Math.floor(h.ult)+'%';$('xC').className=h.ult>=100?'rdy':'cd';
   squad.forEach((s,i)=>{const el=sqEls[i];el.classList.toggle('cur',i===P.cur);el.classList.toggle('lock',!s.avail);el.classList.toggle('down',s.down);el.querySelector('.hb u').style.width=s.hp/s.max*100+'%';el.querySelector('.ub u').style.width=s.ult+'%';el.classList.toggle('ready',s.ult>=100);});
   $('vig').style.opacity=clamp((1-h.hp/h.max)*.8-.05+(P.hurtT>0?.3:0),0,.9);const hu=$('hurt');if(+hu.style.opacity>0)hu.style.opacity=Math.max(0,+hu.style.opacity-.02);
-  let nd=0;for(const li of $('oList').children){const d=objDone(li.dataset.b);li.classList.toggle('done',d);if(d)nd++;}$('oN').textContent=nd+' / '+OBJ_ITEMS.length+(typeof LIB_OBJ!=='undefined'?' complete':' defeated');}
+  let nd=0;for(const li of $('oList').children){const d=objDone(li.dataset.b);li.classList.toggle('done',d);if(d)nd++;}$('oN').textContent=nd+' / '+OBJ_ITEMS.length+(MAPX.obj?' complete':' defeated');}
 // ---------- the war beyond the quay ----------
-const warL=new THREE.PointLight(0xffa860,0,220,1.3);scene.add(warL);if(typeof LIB_OBJ!=='undefined')warL.color.setHex(0x9a78ff);let warT=2,warF=0;
+const warL=new THREE.PointLight(0xffa860,0,220,1.3);scene.add(warL);if(MAPX.warColor)warL.color.setHex(MAPX.warColor);let warT=2,warF=0;
 for(const [x,y,z,c,s] of[[-70,10,-210,0xff8a3a,60],[55,8,-230,0xff6a2a,70],[0,14,-260,0xffb070,90],[-110,6,-120,0xff5a2a,50]]){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:dotTex,color:c,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));sp.position.set(x,y,z);sp.scale.set(s,s*.6,1);scene.add(sp);}
 function updWar(dt){for(const s of spots){s.ph+=dt*s.sp;s.pivot.rotation.y=s.ph;s.beam.rotation.x=Math.PI/2+.62+Math.sin(s.ph*1.7)*.3;}for(const c of chand)c.rotation.z=Math.sin(G.t*.5+c.position.x)*.012;
   for(let i=0;i<sheets.length;i++){const s=sheets[i];s.x+=(Math.sin(G.t*.3+i)*.8+1.4)*dt;s.y-=s.v*dt*.6;s.z+=Math.cos(G.t*.25+i*1.3)*.6*dt;if(s.y<.2)s.y=16;if(s.x-P.pos.x>32)s.x-=64;if(s.x-P.pos.x<-32)s.x+=64;if(s.z-P.pos.z>32)s.z-=64;if(s.z-P.pos.z<-32)s.z+=64;dm.position.set(s.x,s.y,s.z);dm.rotation.set(G.t*s.v+s.r,s.r+G.t*.5,s.s);dm.updateMatrix();sheetIM.setMatrixAt(i,dm.matrix);}sheetIM.instanceMatrix.needsUpdate=true;
@@ -532,11 +543,11 @@ function update(dt){
   if(near){pr.style.opacity=1;pr.innerHTML=near.prog>0?(near.seal?'Breaking the seal…':'Freeing…'):(near.hold||(near.n==='A'?'Hold <b>E</b> to break the cage':'Hold <b>E</b> to reach the singer'));
     if(keys.KeyE){if(!near.prog){msg('The drowned are answering…');spawnAround(near.x,near.z,12,18,32);}near.prog=(near.prog||0)+dt/3.6;pg.style.opacity=1;pg.firstElementChild.style.width=near.prog*100+'%';
       if(near.prog>=1){near.done=true;pr.style.opacity=0;pg.style.opacity=0;sfx.pick();G.stage++;
-        if(near.seal){sealBroken(near);}else if(near.n==='A'){squad[2].avail=true;if(near.cage)scene.remove(near.cage);near.lt.color.setHex(0xffb450);say('Tobias','Took you long enough. Hand me a rifle, a wrench, anything. I am not fussy.','#d08a3a',6000);msg('TOBIAS REED JOINS THE COMPANY',3500);setTimeout(()=>say('Madame Coralie','Press 3 to bring him forward. The fork is a cage built out of a song. Follow the echo of turning pages.','#e9c98a',6500),6200);}
-        else{squad[3].avail=true;say('Mirelle','I only wanted to sing. Then the water answered. Let me sing for you.','#c79aff',6000);msg('MIRELLE JOINS THE COMPANY',3500);setTimeout(()=>say('Madame Coralie','Press 4 for Mirelle. The Warden waits at the end of the quay. Its bell is raised before it falls.','#e9c98a',6500),6200);}}}
+        if(near.seal){sealBroken(near);}else if(near.n==='A'){squadOf('tobias').avail=true;if(near.cage)scene.remove(near.cage);near.lt.color.setHex(0xffb450);say('Tobias','Took you long enough. Hand me a rifle, a wrench, anything. I am not fussy.','#d08a3a',6000);msg('TOBIAS REED JOINS THE COMPANY',3500);setTimeout(()=>say('Madame Coralie','Press 3 to bring him forward. The fork is a cage built out of a song. Follow the echo of turning pages.','#e9c98a',6500),6200);}
+        else{squadOf('mirelle').avail=true;say('Mirelle','I only wanted to sing. Then the water answered. Let me sing for you.','#c79aff',6000);msg('MIRELLE JOINS THE COMPANY',3500);setTimeout(()=>say('Madame Coralie','Press 4 for Mirelle. The Warden waits at the end of the quay. Its bell is raised before it falls.','#e9c98a',6500),6200);}}}
     else{near.prog=Math.max(0,(near.prog||0)-dt*.5);pg.style.opacity=near.prog>0?1:0;pg.firstElementChild.style.width=near.prog*100+'%';}}
   else{pr.style.opacity=0;pg.style.opacity=0;}
-  const AZ=typeof LIB_ACTZ!=='undefined'?LIB_ACTZ:[-60,-168,-290],actN=P.pos.z>AZ[0]?0:P.pos.z>AZ[1]?1:P.pos.z>AZ[2]?2:3;if(actN!==G.act){G.act=actN;msg((typeof LIB_ACTN!=='undefined'?LIB_ACTN:['ACT I · THE FOYER · Port Highwater','ACT II · THE ORCHESTRA PIT · The Grand Aqueduct','ACT III · THE AUDITORIUM · The Coral Opera','ACT IV · THE STAGE · The Sunken Playhouse'])[actN],3400);}
+  const AZ=MAPX.actz||[-60,-168,-290],actN=P.pos.z>AZ[0]?0:P.pos.z>AZ[1]?1:P.pos.z>AZ[2]?2:3;if(actN!==G.act){G.act=actN;msg((MAPX.actn||['ACT I · THE FOYER · Port Highwater','ACT II · THE ORCHESTRA PIT · The Grand Aqueduct','ACT III · THE AUDITORIUM · The Coral Opera','ACT IV · THE STAGE · The Sunken Playhouse'])[actN],3400);}
   for(let i=pickups.length-1;i>=0;i--){const k=pickups[i];k.t+=dt;k.g.rotation.y+=dt;k.g.position.y=.35+Math.sin(k.t*2)*.05;if(Math.hypot(k.x-P.pos.x,k.z-P.pos.z)<1.3){if(k.kind==='med'&&squad.some(s=>s.avail&&!s.down&&s.hp<s.max)){for(const s of squad)if(s.avail&&!s.down)s.hp=Math.min(s.max,s.hp+35);msg('+ Company vitals');}else if(k.kind==='ammo'&&squad.some(s=>s.avail&&s.res<s.def.w.res*3)){for(const s of squad)if(s.avail)s.res=Math.min(s.def.w.res*3,s.res+Math.round(s.def.w.res*.5));msg('+ Ammunition for the whole company');}else continue;sfx.pick();scene.remove(k.g);pickups.splice(i,1);}}
   P.hurtT=Math.max(0,P.hurtT-dt);updEnemies(dt);updAllies(dt);updFx(dt);updWar(dt);
   for(let i=later.length-1;i>=0;i--)if(later[i].t<=G.t){const f=later[i].fn;later.splice(i,1);f();}
@@ -566,25 +577,26 @@ const SPEC={
  ondine:{kind:'diva',coat:sk0.coat,torso:sk0.torso,trim:sk0.trim,hair:sk0.hair,streak:sk0.streak==='rainbow'?'#8ad8ff':sk0.streak,hat:sk0.hat,band:sk0.band==='rainbow'?'#ffffff':sk0.band,skin:'#f6dccb',legs:'#f2f2f6',boots:'#3a4668',face:'ondine',aura:sk0.aura},
  caliste:{kind:'swim',cloth:'#3d3fa8',strap:'#e8962a',skin:'#c8946c',hair:'#16100f',streak:'#d03a8a',face:'caliste',aura:'255,200,90'},
  tobias:{kind:'stagehand',coat:cT.top||'#7a5434',vest:cT.vest||'#3e3226',shirt:cT.shirt||'#e2d6c0',legs:cT.legs||'#3c3c48',boots:cT.boots||'#2a1e16',trim:cT.trim||'#c9a050',hair:cT.hair||'#3a2a1e',skin:cT.skin||'#dcb090',hat:cT.hatCol||'#4a3a2a',face:'tobias',aura:'255,200,120'},
+ maren:{kind:'guard',cloth:'#f4f8fc',strap:'#2f6fd0',skin:'#f0c4a8',hair:'#d8682c',streak:'#d8682c',face:'maren',aura:'46,196,182'},
  mirelle:{kind:'ghost',gown:cM.gown||'#2f7286',coat:cM.top||'#5aa8b8',trim:cM.trim||'#bff4ff',hair:cM.hair||'#2e5a6a',skin:cM.skin||'#cfe4ea',face:'mirelle',aura:'140,230,255'}
 };
 function buildChar(sp){const pivot=new THREE.Group(),root=new THREE.Group();pivot.add(root);pivot.rotation.order='YXZ';
   const M=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.72,envMapIntensity:.6},o)),grp=(name,par,x,y,z)=>{const g=new THREE.Group();g.name=name;g.position.set(x,y,z);par.add(g);return g;},
     mesh=(par,geo,mat,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;par.add(m);return m;},cyl=(par,r0,r1,len,mat,y=0)=>mesh(par,new THREE.CylinderGeometry(r0,r1,len,12),mat,0,y,0),box=(par,w,h,d,mat,x=0,y=0,z=0)=>mesh(par,new THREE.BoxGeometry(w,h,d),mat,x,y,z);
-  const K=sp.kind,skinM=M(sp.skin),hairM=M(sp.hair),coatM=M(sp.coat||sp.cloth||'#444'),trimM=M(sp.trim||sp.strap||'#e9c98a',{metalness:.6,roughness:.4});
+  const K=sp.kind,SW=K==='swim'||K==='guard',skinM=M(sp.skin),hairM=M(sp.hair),coatM=M(sp.coat||sp.cloth||'#444'),trimM=M(sp.trim||sp.strap||'#e9c98a',{metalness:.6,roughness:.4});
   const hips=grp('Hips',root,0,.95,0);
   const legM=K==='diva'||K==='stagehand'?M(sp.legs):skinM;
   for(const [sd,x] of[['Left',.09],['Right',-.09]]){const ul=grp(sd+'UpLeg',hips,x,0,0),l=grp(sd+'Leg',ul,0,-.45,0),f=grp(sd+'Foot',l,0,-.45,0);grp(sd+'ToeBase',f,0,-.06,.15);
     if(K!=='ghost'){cyl(ul,.085,.07,.45,legM,-.225);cyl(l,.07,.055,.45,legM,-.225);if(K==='diva'||K==='stagehand'){const bm=M(sp.boots,{roughness:.5,metalness:.2});cyl(l,.075,.07,.2,bm,-.34);box(f,.1,.07,.26,bm,0,-.03,.07);}else box(f,.09,.05,.24,skinM,0,-.03,.07);}}
   if(K==='diva'||K==='stagehand'){cyl(hips,.2,.22,.18,K==='diva'?M(sp.legs):M(sp.legs),0);}
   if(K==='stagehand')cyl(hips,.225,.225,.06,trimM,.1);
-  if(K==='swim'){cyl(hips,.215,.215,.15,M(sp.cloth,{roughness:.6}),-.03);for(const s of[-1,1]){box(hips,.03,.2,.01,trimM,s*.12,.07,.2).rotation.z=s*.7;}}
+  if(SW){cyl(hips,.215,.215,.15,M(sp.cloth,{roughness:.6}),-.03);for(const s of[-1,1]){box(hips,.03,.2,.01,trimM,s*.12,.07,.2).rotation.z=s*.7;}}
   if(K==='ghost'){mesh(hips,new THREE.CylinderGeometry(.21,.58,1.0,18,1,true),M(sp.gown,{transparent:true,opacity:.78,emissive:sp.gown,emissiveIntensity:.25,side:THREE.DoubleSide}),0,-.42,0);}
   if(K==='diva'){for(const s of[-1,1])box(hips,.24,.6,.05,coatM,s*.1,-.28,-.19);}
   const sp0=grp('Spine',hips,0,.08,0),sp1=grp('Spine1',sp0,0,.15,0),sp2=grp('Spine2',sp1,0,.15,0);
   if(K==='diva'){cyl(sp0,.22,.26,.6,coatM,.2);box(sp0,.2,.5,.04,M(sp.torso),0,.2,.22);box(sp0,.03,.5,.045,trimM,-.1,.2,.225);box(sp0,.03,.5,.045,trimM,.1,.2,.225);for(const s of[-1,1])mesh(sp2,new THREE.SphereGeometry(.07,10,8),trimM,s*.22,.1,0);box(sp2,.1,.05,.04,M(sp.band),0,.1,.17);}
   if(K==='stagehand'){cyl(sp0,.22,.26,.6,coatM,.2);box(sp0,.2,.5,.04,M(sp.vest),0,.2,.22);box(sp2,.12,.06,.05,M(sp.shirt),0,.15,.16);box(hips,.06,.3,.04,M(0x8a8a90,{metalness:.9,roughness:.3}),.22,-.1,.05);}
-  if(K==='swim'){cyl(sp0,.2,.24,.6,skinM,.2);cyl(sp1,.215,.215,.15,M(sp.cloth),.02);for(const s of[-1,1]){box(sp1,.02,.22,.01,trimM,s*.07,.14,.2).rotation.z=s*.35;}box(sp0,.4,.03,.01,trimM,0,.08,.215);}
+  if(SW){cyl(sp0,.2,.24,.6,skinM,.2);cyl(sp1,.215,.215,.15,M(sp.cloth),.02);for(const s of[-1,1]){box(sp1,.02,.22,.01,trimM,s*.07,.14,.2).rotation.z=s*.35;}box(sp0,.4,.03,.01,trimM,0,.08,.215);}
   if(K==='ghost'){cyl(sp0,.2,.24,.6,M(sp.coat,{transparent:true,opacity:.85,emissive:sp.coat,emissiveIntensity:.2}),.2);}
   grp('Neck',sp2,0,.2,0);const head=grp('Head',sp2.getObjectByName('Neck'),0,.1,0),hr=.135;
   const hd=mesh(head,new THREE.SphereGeometry(hr,22,16),skinM,0,.09,0);
@@ -593,30 +605,32 @@ function buildChar(sp){const pivot=new THREE.Group(),root=new THREE.Group();pivo
     const hat=grp('hat',head,0,.24,0);cyl(hat,.11,.12,.22,M(sp.hat),.1);cyl(hat,.19,.19,.02,M(sp.hat),0);cyl(hat,.115,.115,.04,M(sp.band,{emissive:sp.band,emissiveIntensity:.5}),.04);}
   if(K==='stagehand'){mesh(head,new THREE.SphereGeometry(hr*1.08,16,12),hairM,0,.13,-.03).scale.set(1,.85,1);const cap2=grp('cap',head,0,.2,0);cyl(cap2,.14,.15,.07,M(sp.hat),.02);box(cap2,.2,.015,.12,M(sp.hat),0,-.005,.12);}
   if(K==='ghost'){box(head,.3,.55,.08,hairM,0,-.12,-.1);mesh(head,new THREE.SphereGeometry(hr*1.1,16,12),hairM,0,.13,-.04).scale.set(1,.9,1);for(let i=0;i<6;i++)box(head,.05,.1,.02,M(0x4a9a5a),-.12+i*.048,.24,.04).rotation.z=(i-2.5)*.12;}
-  if(K==='swim'){mesh(head,new THREE.SphereGeometry(hr*1.08,16,12),hairM,0,.12,-.035).scale.set(1,.9,1);mesh(head,new THREE.SphereGeometry(.07,10,8),hairM,0,.22,-.15);mesh(head,new THREE.CapsuleGeometry(.04,.5,4,8),hairM,0,-.1,-.2);box(head,.03,.4,.05,M(sp.streak),.04,-.1,-.2);}
-  const sleeve=K==='swim'?skinM:M(sp.coat||sp.cloth);
+  if(SW){mesh(head,new THREE.SphereGeometry(hr*1.08,16,12),hairM,0,.12,-.035).scale.set(1,.9,1);mesh(head,new THREE.SphereGeometry(.07,10,8),hairM,0,.22,-.15);mesh(head,new THREE.CapsuleGeometry(.04,.5,4,8),hairM,0,-.1,-.2);box(head,.03,.4,.05,M(sp.streak),.04,-.1,-.2);}
+  if(K==='guard'){const vz=grp('visor',head,0,.2,0);box(vz,.3,.03,.2,M('#2f6fd0'),0,0,.12);box(vz,.22,.05,.05,M('#ffffff'),0,.02,.02);const sh=mesh(vz,new THREE.ConeGeometry(.04,.07,8),M('#f0b86a'),0,.07,.06);for(const s2 of[-1,1]){const w=box(vz,.03,.14,.01,M('#dff0ff'),s2*.05,.12,.0);w.rotation.z=-s2*.2;}
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.28,.08,10,24),M('#2ec4b6',{roughness:.35}));ring.position.set(0,.12,-.24);ring.rotation.set(.2,0,0);sp2.add(ring);const wh=box(sp1,.04,.07,.03,M('#c0c8d0',{metalness:.8}),0,.12,.2);}
+  const sleeve=K==='guard'?M('#eef4fa'):SW?skinM:M(sp.coat||sp.cloth);
   for(const [sd,x] of[['Left',.24],['Right',-.24]]){const ar=grp(sd+'Arm',sp2,x,.12,0);cyl(ar,.06,.05,.3,sleeve,-.15);const fa=grp(sd+'ForeArm',ar,0,-.3,0);cyl(fa,.05,.045,.28,sleeve,-.14);const hn=grp(sd+'Hand',fa,0,-.28,0);mesh(hn,new THREE.SphereGeometry(.052,10,8),K==='diva'?M(0xf4f4f8):skinM);}
   pivot.updateMatrixWorld(true);const r=mkRig(root,pivot);r.aura=sp.aura;return r;}
-['ondine','caliste','tobias','mirelle'].forEach((id,i)=>{const r=buildChar(SPEC[id]);tpRoot.add(r.pivot);r.pivot.visible=false;rigs[i]=r;});
+SQUAD_IDS.forEach((id,i)=>{const r=buildChar(SPEC[id]);tpRoot.add(r.pivot);r.pivot.visible=false;rigs[i]=r;});
 
 // Characters with a real model: the rigged file replaces the stand-in body when the player has earned it from the box office.
 // Each clip is optional: a walk plays in place on the ground, and Ondine's flying kick is her Riptide Waltz.
 function loadRigModel(idx,url,allowed){
-  if(!allowed)return;
+  if(!allowed||idx<0)return;
   new GLTFLoader().loadAsync(url).then(g=>{const root=g.scene,pivot=new THREE.Group();pivot.add(root);root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root);const k=RIGH/(box.max.y-box.min.y||1);pivot.scale.setScalar(k);pivot.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(pivot);const c=box.getCenter(V3());root.position.add(V3(-c.x/k,-box.min.y/k,-c.z/k));
     const old=rigs[idx];if(old)tpRoot.remove(old.pivot);const r=mkRig(root,pivot);r.aura=old&&old.aura;
     if(g.animations&&g.animations.length){r.mixer=new THREE.AnimationMixer(root);r.clip=g.animations.find(a=>/kick/i.test(a.name))||null;const wc=g.animations.find(a=>/walk/i.test(a.name));if(wc){const tk=wc.tracks.find(x=>x.name==='Hips.position');if(tk){const v=tk.values;for(let i=0;i<v.length;i+=3){v[i]=v[0];v[i+2]=v[2];}}r.walkAct=r.mixer.clipAction(wc);r.walkAct.play();r.walkAct.enabled=false;}}
     tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
 // Mirelle has no legs: her model is a still body that floats, drifts and tilts with her movement
 function loadFloatModel(idx,url,allowed){
-  if(!allowed)return;
+  if(!allowed||idx<0)return;
   new GLTFLoader().loadAsync(url).then(g=>{const root=g.scene,pivot=new THREE.Group();pivot.add(root);pivot.rotation.order='YXZ';root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root);const k=RIGH/(box.max.y-box.min.y||1);pivot.scale.setScalar(k);pivot.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(pivot);const c=box.getCenter(V3());root.position.add(V3(-c.x/k,-box.min.y/k,-c.z/k));
     root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;if(o.material){o.material.envMapIntensity=.7;o.material.side=THREE.DoubleSide;}}});
     const old=rigs[idx];if(old)tpRoot.remove(old.pivot);const r={pivot,root,B:{},rest:new Map(),ph:0,kick:0,yaw:undefined,lean:0,static:true,aura:old&&old.aura};tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
 const mirelleJoined=!!(SAVE.campaign&&SAVE.campaign.party&&SAVE.campaign.party.includes('mirelle'));
-loadFloatModel(3,'../3d/models/mirelle.glb?v=1',true);
-loadRigModel(0,'../3d/models/ondine.glb?v=3',beachOndine);
-loadRigModel(1,'../3d/models/caliste.glb?v=2',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
+loadFloatModel(ix('mirelle'),'../3d/models/mirelle.glb?v=1',true);
+loadRigModel(ix('ondine'),'../3d/models/ondine.glb?v=3',beachOndine);
+loadRigModel(ix('caliste'),'../3d/models/caliste.glb?v=2',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
 function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur&&!P.dead||(tpOn&&P.dead&&i===P.cur);});}
 function setView(tp,quiet){tpOn=tp;gunHolder=tp?gunRoot:vm;gunHolder.add(gunG,flash,flashL);if(!tp){gunG.position.set(0,0,0);}armsG.visible=!tp;vm.visible=!tp;gunRoot.visible=tp;tpRoot.visible=tp;refreshRigs();if(!quiet)msg(tp?'THIRD PERSON':'FIRST PERSON',900);}
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&G.state==='play')setView(!tpOn);});
@@ -701,7 +715,7 @@ bind('sDiff','diff',v=>v,'change');bind('sSens','sens',parseFloat);bind('sFov','
 for(const [pid,lab] of [['start','Settings'],['pause','Settings']]){const p=$s(pid),b=document.createElement('button');b.className='sbtn';b.textContent=lab;b.onclick=()=>window.openSettings(p);p.querySelector('.card').appendChild(b);}
 }
 // retry from a checkpoint (death or pause)
-const CKP=typeof LIB_CKP!=='undefined'?LIB_CKP:[[0,54],[0,-70],[0,-176],[0,-298]];
+const CKP=MAPX.ckp||[[0,54],[0,-70],[0,-176],[0,-298]];
 function retry(){const a=Math.max(0,G.act),[cx,cz]=CKP[a];P.dead=false;for(const s of squad){if(s.avail){s.down=false;s.hp=s.max;s.mag=s.def.w.mag;s.res=Math.max(s.res,Math.round(s.def.w.res*1.2));}}P.cur=squad.findIndex(s=>s.avail&&!s.down)||0;if(P.cur<0)P.cur=0;P.reload=0;buildGun(W());
  P.pos.set(cx,floorY(cx,cz,40,0),cz);P.vel.set(0,0,0);P.hook.on=false;P.glideOn=false;
  for(const e of enemies){if(e.dead)continue;if(e.B||e.state!=='idle'){if(e.B){e.hp=e.max;e.engaged=false;e.shield=0;}else if(e.g.position.distanceTo(P.pos)<60){e.hp=e.max;}if(e.state!=='idle'&&!e.B)e.state='idle';}}
@@ -726,10 +740,10 @@ function musTick(){if(!AC||!musicG||G.state!=='play'||ST.music<=0)return;const b
 setInterval(musTick,120);
 setInterval(()=>{if(G.state!=='play')return;let c=false,b=false;for(const e of enemies){if(e.dead)continue;if(e.B&&e.engaged&&e.g.position.distanceTo(P.pos)<110)b=true;else if(e.state!=='idle'&&e.g.position.distanceTo(P.pos)<46)c=true;}combat=c;bossOn=b;},500);
 // ----- voices: the story's own lines, spoken with the browser's speech if enabled -----
-const VOICE={ondine:{p:1.25,r:1},caliste:{p:.95,r:1.05},tobias:{p:.6,r:.9},mirelle:{p:1.5,r:.95}};
+const VOICE={ondine:{p:1.25,r:1},caliste:{p:.95,r:1.05},tobias:{p:.6,r:.9},mirelle:{p:1.5,r:.95},maren:{p:1.35,r:1.12}};
 function speak(who,text){if(!ST.voices||!window.speechSynthesis)return;try{const id=Object.keys(CAST).find(k=>CAST[k].name===who||CAST[k].short===who),v=VOICE[id]||{p:1,r:1},u=new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g,''));u.pitch=v.p;u.rate=v.r;u.volume=Math.min(1,ST.vol+.2);speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 const _say=say;say=function(who,text,col,ms){_say(who,text,col,ms);speak(who,text);};
-const BARK={kill:{ondine:['One more verse done.','Next soloist.','That was my cue.'],caliste:['Target down.','Steady.','Clean.'],tobias:['Stay down!','Not on my stage.'],mirelle:['Hush now.','Be at peace.']},hurt:{ondine:['Still standing!'],caliste:['Not dead yet.'],tobias:['Hurts, but I hold!'],mirelle:['Mind the harmony!']},low:{ondine:['I need a moment!'],caliste:['Covering — I am hurt.'],tobias:['Cover me!'],mirelle:['I cannot sing through this!']},boss:{ondine:['Hold the line, everyone.'],caliste:['That is a very large target.'],tobias:['Brace yourselves!'],mirelle:['It hears us.']}};
+const BARK={kill:{maren:['Whitecap!','Lifeguard on duty.','Back in the water.'],ondine:['One more verse done.','Next soloist.','That was my cue.'],caliste:['Target down.','Steady.','Clean.'],tobias:['Stay down!','Not on my stage.'],mirelle:['Hush now.','Be at peace.']},hurt:{maren:['Salt in the wound!'],ondine:['Still standing!'],caliste:['Not dead yet.'],tobias:['Hurts, but I hold!'],mirelle:['Mind the harmony!']},low:{maren:['Need a lifeguard here!'],ondine:['I need a moment!'],caliste:['Covering — I am hurt.'],tobias:['Cover me!'],mirelle:['I cannot sing through this!']},boss:{maren:['Big one on the horizon!'],ondine:['Hold the line, everyone.'],caliste:['That is a very large target.'],tobias:['Brace yourselves!'],mirelle:['It hears us.']}};
 let barkT=0;function bark(k){if(!ST.voices&&!ST.hints)return;if(G.t<barkT)return;const h=H().id,pool=(BARK[k]||{})[h];if(!pool)return;barkT=G.t+12;const t=pool[Math.floor(Math.random()*pool.length)];if(ST.voices)speak(H().def.short,t);const s=$('sub');if(k==='boss'||k==='low')say(H().def.short,t,H().def.col,2600);}
 let lastK=0,lastHp=0,lastBossSeen=false;
 setInterval(()=>{if(G.state!=='play')return;if(G.kills>lastK&&G.kills%5===0)bark('kill');lastK=G.kills;const h=H();if(h.hp/h.max<.3&&lastHp>=.3)bark('low');lastHp=h.hp/h.max;if(bossOn&&!lastBossSeen)bark('boss');lastBossSeen=bossOn;},700);
@@ -748,13 +762,13 @@ const padPrev={};let padOn=false;
 function pollPad(dt){const gp=(navigator.getGamepads&&[...navigator.getGamepads()].find(g=>g&&g.connected));if(!gp){if(padOn){padOn=false;AX.fw=AX.st=AX.lx=AX.ly=0;}return;}padOn=true;const dz=v=>Math.abs(v)<.18?0:v,a=gp.axes,b=gp.buttons.map(x=>x.pressed),pr=(i)=>b[i]&&!padPrev[i];
  AX.st=dz(a[0]);AX.fw=-dz(a[1]);AX.lx=dz(a[2]);AX.ly=dz(a[3]);AX.sprint=b[10];
  if(G.state==='menu'||G.state==='pause'){if(pr(0)||pr(9))begin();}else if(G.state==='dead'||G.state==='won'){if(pr(0))retry();}
- else if(G.state==='play'){mouseDown=b[7]||touchFire;mouseR=b[6]||touchAds;if(b[7]&&!padPrev[7])P.edge=true;if(pr(2))reload();if(pr(4))useQ();if(pr(3))useX();if(pr(1))setView(!tpOn);if(pr(14)||pr(15)){const n=(P.cur+(pr(15)?1:3))%4;switchTo(n);}
+ else if(G.state==='play'){mouseDown=b[7]||touchFire;mouseR=b[6]||touchAds;if(b[7]&&!padPrev[7])P.edge=true;if(pr(2))reload();if(pr(4))useQ();if(pr(3))useX();if(pr(1))setView(!tpOn);if(pr(14)||pr(15)){const n=(P.cur+(pr(15)?1:squad.length-1))%squad.length;switchTo(n);}
   if(pr(5))fireHook();if(!b[5]&&padPrev[5])releaseHook(false);if(pr(0)){padSpace=true;toggleGlide();}if(!b[0])padSpace=false;if(pr(8))toggleBigMap();if(pr(9)){G.state='pause';$('pause').classList.remove('hide');}}
  for(let i=0;i<b.length;i++)padPrev[i]=b[i];}
 let padSpace=false,touchFire=false,touchAds=false,touchSpace=false;
 {const isT=('ontouchstart'in window)||(matchMedia&&matchMedia('(pointer:coarse)').matches);if(isT){const t=document.createElement('div');t.id='touch';t.innerHTML='<div id="tjoy"><i></i></div>';document.body.appendChild(t);
  const btn=(txt,r,b,fn,up)=>{const e=document.createElement('div');e.className='tb';e.textContent=txt;e.style.right=r+'px';e.style.bottom=b+'px';e.addEventListener('touchstart',ev=>{ev.preventDefault();e.classList.add('on');fn();},{passive:false});e.addEventListener('touchend',ev=>{ev.preventDefault();e.classList.remove('on');if(up)up();},{passive:false});t.appendChild(e);};
- btn('FIRE',30,90,()=>{touchFire=true;mouseDown=true;P.edge=true;},()=>{touchFire=false;mouseDown=false;});btn('AIM',100,170,()=>{touchAds=true;mouseR=true;},()=>{touchAds=false;mouseR=false;});btn('JUMP',100,30,()=>{keys.Space=true;toggleGlide();},()=>{keys.Space=false;});btn('R',170,100,()=>reload());btn('HOOK',30,170,()=>fireHook(),()=>releaseHook(false));btn('Q',170,170,()=>useQ());btn('X',240,100,()=>useX());btn('RUN',240,30,()=>{keys.ShiftLeft=!keys.ShiftLeft;});btn('SWAP',240,170,()=>switchTo((P.cur+1)%4));btn('II',30,260,()=>{if(G.state==='play'){G.state='pause';$('pause').classList.remove('hide');}});
+ btn('FIRE',30,90,()=>{touchFire=true;mouseDown=true;P.edge=true;},()=>{touchFire=false;mouseDown=false;});btn('AIM',100,170,()=>{touchAds=true;mouseR=true;},()=>{touchAds=false;mouseR=false;});btn('JUMP',100,30,()=>{keys.Space=true;toggleGlide();},()=>{keys.Space=false;});btn('R',170,100,()=>reload());btn('HOOK',30,170,()=>fireHook(),()=>releaseHook(false));btn('Q',170,170,()=>useQ());btn('X',240,100,()=>useX());btn('RUN',240,30,()=>{keys.ShiftLeft=!keys.ShiftLeft;});btn('SWAP',240,170,()=>switchTo((P.cur+1)%squad.length));btn('II',30,260,()=>{if(G.state==='play'){G.state='pause';$('pause').classList.remove('hide');}});
  const joy=t.querySelector('#tjoy'),knob=joy.querySelector('i');let jid=null,lid=null,lp=null;
  joy.addEventListener('touchstart',e=>{jid=e.changedTouches[0].identifier;e.preventDefault();},{passive:false});
  addEventListener('touchmove',e=>{for(const c of e.changedTouches){if(c.identifier===jid){const r=joy.getBoundingClientRect(),x=(c.clientX-r.left-65)/65,y=(c.clientY-r.top-65)/65,m=Math.min(1,Math.hypot(x,y)),an=Math.atan2(y,x);AX.st=Math.cos(an)*m;AX.fw=-Math.sin(an)*m;knob.style.transform=`translate(${Math.cos(an)*m*40}px,${Math.sin(an)*m*40}px)`;}else if(c.identifier===lid&&lp){P.yaw-=(c.clientX-lp.x)*.005*ST.sens;P.pitch=clamp(P.pitch-(c.clientY-lp.y)*.005*ST.sens*(ST.invY?-1:1),-1.5,1.5);lp={x:c.clientX,y:c.clientY};}}if(G.state==='play')e.preventDefault();},{passive:false});
@@ -771,7 +785,7 @@ function bodyLang(r,dt){const p=r.pivot,t=G.t;const hurtK=clamp(P.hurtT/.5,0,1),
 {const st=document.createElement('style');st.textContent=`.wp.rec{color:#5aff9a;font-weight:700;letter-spacing:.06em}.wp.rec i{border-color:#5aff9a;border-radius:50%;transform:none;box-shadow:0 0 10px #5aff9a}#bigmap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(4,6,10,.82);z-index:4}#bigmap.on{display:flex}#bigmap canvas{height:min(88vh,660px);width:auto;border:1px solid rgba(233,201,138,.5);background:#080b12}#bigmap .cap{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font:12px system-ui;letter-spacing:.14em;color:var(--mute)}`;document.head.appendChild(st);
 const bm=document.createElement('div');bm.id='bigmap';bm.innerHTML='<canvas width="360" height="644"></canvas><div class="cap">M or Esc · close the map</div>';document.body.appendChild(bm);
 const bc=bm.querySelector('canvas'),bx=bc.getContext('2d'),SX=360/(BX*2),SZ=644/(ZN-ZS),mx=x=>(x+BX)*SX,mz=z=>(z-ZS)*SZ;
-const ACTS=typeof LIB_ACTN!=='undefined'?LIB_ACTN.map((n,i)=>[n.split(' · ').slice(0,2).join(' · '),i?LIB_ACTZ[i-1]:ZN,i<3?LIB_ACTZ[i]:ZS]):[['ACT I · THE FOYER',ZN,-60],['ACT II · THE ORCHESTRA PIT',-60,-168],['ACT III · THE AUDITORIUM',-168,-290],['ACT IV · THE STAGE',-290,ZS]];
+const ACTS=MAPX.actn?MAPX.actn.map((n,i)=>[n.split(' · ').slice(0,2).join(' · '),i?MAPX.actz[i-1]:ZN,i<3?MAPX.actz[i]:ZS]):[['ACT I · THE FOYER',ZN,-60],['ACT II · THE ORCHESTRA PIT',-60,-168],['ACT III · THE AUDITORIUM',-168,-290],['ACT IV · THE STAGE',-290,ZS]];
 window.drawBigMap=function(){bx.clearRect(0,0,360,644);ACTS.forEach(([n,z0,z1],i)=>{bx.fillStyle=i%2?'rgba(233,201,138,.05)':'rgba(120,170,255,.06)';bx.fillRect(0,mz(z1),360,mz(z0)-mz(z1));bx.fillStyle='rgba(233,201,138,.55)';bx.font='bold 10px system-ui';bx.textAlign='left';bx.fillText(n,8,mz(z1)+14);bx.strokeStyle='rgba(233,201,138,.25)';bx.beginPath();bx.moveTo(0,mz(z1));bx.lineTo(360,mz(z1));bx.stroke();});
  for(const e of enemies){if(e.dead||e.B)continue;bx.fillStyle=e.state==='idle'?'rgba(255,90,68,.4)':'#ff5a44';bx.fillRect(mx(e.g.position.x)-1.5,mz(e.g.position.z)-1.5,3,3);}
  bx.fillStyle='#7ac8ff';for(const a of allies){if(a.dead)continue;bx.fillRect(mx(a.g.position.x)-1.5,mz(a.g.position.z)-1.5,3,3);}
@@ -785,7 +799,7 @@ window.toggleBigMap=function(force){const on=force===undefined?!bm.classList.con
 addEventListener('keydown',e=>{if(e.repeat)return;if(e.code==='KeyM'&&(G.state==='play'||bm.classList.contains('on')))toggleBigMap();else if(e.code==='Escape'&&bm.classList.contains('on'))toggleBigMap(false);});
 setInterval(()=>{if(bm.classList.contains('on'))drawBigMap();},100);
 setTimeout(()=>{if(!window.__recHint){window.__recHint=1;}},0);
-let hintShown=false;setInterval(()=>{if(G.state==='play'&&!hintShown&&G.t>14){hintShown=true;if(!squad[2].avail||!squad[3].avail)msg('Free Tobias at the Fork and Mirelle at the Shrine · press M for the map',5200);}},1000);
+let hintShown=false;setInterval(()=>{if(G.state==='play'&&!hintShown&&G.t>14){hintShown=true;if(squadOf('tobias')&&squadOf('mirelle')&&(!squadOf('tobias').avail||!squadOf('mirelle').avail))msg('Free Tobias at the Fork and Mirelle at the Shrine · press M for the map',5200);}},1000);
 }
 
 // ---------- camera + loop ----------

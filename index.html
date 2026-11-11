@@ -19758,7 +19758,7 @@ function processFrontDispatch() {
   recapShow('Dispatch from the Drowned Front', rows, got.join(' ') || 'Your honours and errands have been updated.');
 }
 document.querySelectorAll('[data-href]').forEach(b => b.onclick = () => { sfx('ui'); location.href = b.dataset.href; });
-function frontSub() { const el = document.getElementById('lFrontSub'), F = save.front; if (el) el.textContent = F && (F.kills || F.clears) ? `${fmt(F.kills)} drowned defeated · ${Object.keys(F.bosses).length} of 5 bosses` : 'A third-person war for the whole company · two chapters'; }
+function frontSub() { const el = document.getElementById('lFrontSub'), F = save.front; if (el) el.textContent = F && (F.kills || F.clears) ? `${fmt(F.kills)} drowned defeated · ${Object.keys(F.bosses).length} of 5 bosses` : 'A third-person war on three maps · Caliste and Maren on the beach'; }
 (function () { const prev = onModeEnter; onModeEnter = function (m, o) { const r = prev.apply(this, arguments); if (m === 'chars') { save.settings.sawChars = true; } if (m === 'lobby') { try { processFrontDispatch(); frontSub(); renderToday(); tdApplyGates(); } catch (e) { console.warn(e); } } return r; }; })();
 try { renderToday(); tdApplyGates(); } catch (e) {}
 
