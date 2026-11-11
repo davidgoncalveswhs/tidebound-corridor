@@ -2081,11 +2081,14 @@
     <div class="title" style="font-size:clamp(28px,3.2vw,46px)">The Voice Beneath<br>the Aqueduct</div>
     <div class="subtitle" id="stSyn"></div>
     <div class="objBox"><span class="eyebrow">Now</span><div id="stObj"></div></div>
-    <div class="row">
-      <button class="btn primary" id="stGo">Continue</button>
+    <div class="row" style="gap:10px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn primary" id="stExplore">Explore the Drowned Isles</button>
+      <button class="btn" id="stGo">Continue</button>
       <button class="btn" id="stTrial" style="display:none">Face the Warden again</button>
       <button class="btn" id="stTrial2" style="display:none">Face the Matriarch again</button>
     </div>
+    <div class="hint" id="stCoast" style="font:italic 600 14px var(--serif);color:#efd39a;margin-top:8px"></div>
+    <div class="hint" id="stHint"></div>
     <div class="hint" id="stLvl"></div>
     <div class="eyebrow" style="margin-top:18px">On stage tonight</div>
     <div class="cast" id="stCast"></div>
@@ -9941,7 +9944,7 @@ const STORY_STEPS = [
 ];
 const storyD = () => CAMP().step >= 7 ? 1 : 0;
 const storyTitle = () => CAMP().step >= 6 ? 'The Ink That Does Not Dry' : 'The Voice Beneath the Aqueduct';
-function setStep(n) { CAMP().step = n; persist(); if (mode === 'isle' && S && STORY_STEPS[n]) { S.banner = 'New objective'; S.sub = STORY_STEPS[n].obj; S.bannerT = 3.2; } }
+function setStep(n) { if (n <= CAMP().step) return; CAMP().step = n; persist(); if (mode === 'isle' && S && STORY_STEPS[n]) { S.banner = 'New objective'; S.sub = STORY_STEPS[n].obj; S.bannerT = 3.2; } }
 function setSide(n) { save.side.step = Math.max(save.side.step || 0, n); persist(); }
 function recruit(id) { const C = CAMP(); if (!C.party.includes(id)) C.party.push(id); campFix(); persist(); sfx('legend'); }
 function unlockAlt(id) { CAMP().alt[id] = true; persist(); sfx('legend'); }
@@ -10028,7 +10031,7 @@ const SCRIPT = {
     ['coralie', 'One more thing. A stagehand went down this morning to look at the machinery: Tobias Reed. If you find him, bring him home in one piece.'],
     ['ondine', 'I’ll bring him home in a piece of his choosing.'],
     { act: () => setStep(1) },
-    ['narrator', 'New objective: travel to the singing Tuning Fork in the Grand Aqueduct.'],
+    ['narrator', 'The company goes down into the Grand Aqueduct, where the loudest fork is singing.'],
   ],
   fork: [
     ['voice', 'Help… the note won’t end…'],
@@ -10080,7 +10083,7 @@ const SCRIPT = {
     ['narrator', 'Mirelle joins the company: a healer who lifts harmful effects.'],
     ['mirelle', 'The Warden waits past the standing stones. But you shouldn’t face it tired. Go back to your opera house. Someone there is looking for you; I can hear them counting.'],
     { act: () => setStep(4) },
-    ['narrator', 'New objective: return backstage. Open the pause menu and choose Return Backstage.'],
+    ['narrator', 'The company returns backstage. Someone there has been waiting.'],
   ],
   pell: [
     ['pell', 'Lady Ondine! One, two, three, four… sorry. I count when I’m nervous. Pell Ashgrove: apprentice to the Phantom Conductor. Former apprentice. Fled apprentice.'],
@@ -10117,7 +10120,6 @@ const SCRIPT = {
     ['ondine', 'Then we will write a better ending. Isolde, come home with us. The Tide Opera needs a first soprano, and I need someone who knows what we are up against.'],
     { act: () => { setStep(6); CAMP().alt.ondine = true; award('chapter1'); } },
     ['narrator', 'Chapter I complete. Ondine learned Undertow, a second version of her skill: choose it in The Company. A boss trial is now open backstage.'],
-    { act: () => go('story') },
   ],
   reh_tobias: [
     ['tobias', 'Hold this rope. No, lower. That’s a counterweight: lift one thing, and something else has to come down.'],
@@ -10162,7 +10164,7 @@ Object.assign(SCRIPT, {
     ['mirelle', 'I think I have been there. I remember shelves, and a very long hush.'],
     ['ondine', 'Then you walk beside me, and you tell me when the hush stops being friendly.'],
     { act: () => setStep(7) },
-    ['narrator', 'New objective: travel to the singing Tuning Fork in the Drowned Library. Walk west from the Opera Plaza.'],
+    ['narrator', 'The company sets out west from the Opera Plaza, toward the Drowned Library.'],
   ],
   c2_fork: [
     ['verrine', 'Please… do not file me…'],
@@ -10210,11 +10212,11 @@ Object.assign(SCRIPT, {
       { t: 'You were never an entry.', rel: { mirelle: 1 }, then: [['mirelle', 'Say it again when I forget. I forget quickly.']] },
       { t: 'Good. Burn the rest of them.', rel: { mirelle: 1 }, then: [['mirelle', 'One at a time. I think that is how it is meant to be done.']] },
     ] },
-    { act: () => { const got = grantLoot({ scores: 3, keeps: 1 }); showToast('Left on the shelf', 'You found', got.join(' · ')); } },
+    { act: () => { if (!CAMP().flags.c2ShelfLoot) { CAMP().flags.c2ShelfLoot = true; const got = grantLoot({ scores: 3, keeps: 1 }); showToast('Left on the shelf', 'You found', got.join(' · ')); } } },
     ['pell', 'Her voice just rang a fork across the Library. I heard it answer. The cage is listening for us now.'],
     ['mirelle', 'Then we should go home first, and rest. The Archive of Ink is locked, and Isolde may know how to knock.'],
     { act: () => setStep(10) },
-    ['narrator', 'New objective: return backstage. Open the pause menu and choose Return Backstage.'],
+    ['narrator', 'The company returns backstage. Someone there has been waiting.'],
   ],
   c2_interlude: [
     ['isolde', 'I remembered something while you were gone. The chord was written for four voices and one listener. The listener was meant to hold the key.'],
@@ -10224,7 +10226,7 @@ Object.assign(SCRIPT, {
     ['pell', 'Four beats, then a fifth that is not written. That is the Matriarch’s weakness: she can only file what repeats.'],
     ['coralie', 'Take Isolde’s note. Take Pell’s tempo. And come home with a voice that is no longer on any shelf.'],
     { act: () => setStep(11) },
-    ['narrator', 'New objective: confront the Drowned Kraken Matriarch in the Archive of Ink.'],
+    ['narrator', 'The company descends once more into the Library, toward the Archive of Ink.'],
   ],
   c2_boss_pre: [
     ['kraken', 'HUSH. THIS IS A LIBRARY. EVERY VOICE HAS A SHELF. YOURS WILL BE… ALTO.'],
@@ -10243,9 +10245,8 @@ Object.assign(SCRIPT, {
     ['tobias', 'I would like to return a book. Ideally by throwing it at someone.'],
     ['pell', 'The Conductor’s slip says “never.” I would like to change that to “tonight.”'],
     ['ondine', 'Verrine, Isolde, come home with us. The Tide Opera has room for two more sopranos and a very large reading list.'],
-    { act: () => { setStep(12); CAMP().flags.chapter2 = true; if (save.wish) save.wish.pearls = (save.wish.pearls || 0) + 100; persist(); showToast('Chapter II Complete', '100 Tide Pearls and a rave review', 'The Library falls silent.'); award('chapter2'); } },
+    { act: () => { setStep(12); if (!CAMP().flags.chapter2) { CAMP().flags.chapter2 = true; if (save.wish) save.wish.pearls = (save.wish.pearls || 0) + 100; persist(); showToast('Chapter II Complete', '100 Tide Pearls and a rave review', 'The Library falls silent.'); award('chapter2'); } } },
     ['narrator', 'Chapter II complete. 100 Tide Pearls and the review’s payout. A boss trial against the Matriarch is open backstage. The Coral Opera is next. Chapter III is still being written.'],
-    { act: () => go('story') },
   ],
 });
 // The Prompter’s Bargain: the attached tale, retold for this house. It does not move Chapter I.
@@ -13221,14 +13222,18 @@ function renderStory() {
   renderTalePick();
   if (taleView === 'side') { renderSideStory(); return; }
   if (taleView !== 'main') return;
-  const C = CAMP(), st = STORY_STEPS[C.step], step = Math.min(C.step, STORY_BEATS.length - 1), c2 = C.step >= 6, b0 = c2 ? 6 : 0, beats = c2 ? CH2_BEATS : STORY_BEATS;
-  $('stChap').textContent = c2 ? (C.step >= 12 ? 'Chapter II · complete' : `Chapter II · ${CH2_BEATS[C.step - 6]}`) : `Chapter I · ${STORY_BEATS[step]}`;
-  $('stRail').innerHTML = beats.map((_, i) => `<i class="${C.step > b0 + i ? 'got' : C.step === b0 + i ? 'on' : ''}"></i>`).join('');
+  const C = CAMP(), st = STORY_STEPS[C.step], sN = C.step, done = sN >= 12, i0 = Math.min(sN, 11), c2 = sN >= 6;
+  $('stChap').textContent = done ? 'Main story · Chapter II · complete' : `Main story · ${i0 >= 6 ? 'Chapter II' : 'Chapter I'} · ${MAIN_BEATS[i0].name}`;
+  $('stRail').innerHTML = MAIN_BEATS.map((B, n) => `<i class="${sN > n ? 'got' : sN === n ? 'on' : ''} ${n <= sN ? 'live' : ''}" data-main="${n}" title="${n >= 6 ? 'Chapter II' : 'Chapter I'} · Scene ${n + 1}: ${B.name}" style="${n <= sN ? 'cursor:pointer;' : ''}${n === 6 ? 'margin-left:4px;border-left:1px solid rgba(233,201,138,.5);padding-left:1px;' : ''}"></i>`).join('');
+  $('stRail').querySelectorAll('[data-main]').forEach(el => el.onclick = () => { const n = +el.dataset.main; if (TR.active || DLG || n > CAMP().step) return; playMainBeat(n, true); });
   $('stMain').querySelector('.title').innerHTML = c2 ? 'The Ink That<br>Does Not Dry' : 'The Voice Beneath<br>the Aqueduct';
-  $('stSyn').textContent = c2 ? 'A second fork is ringing in the Drowned Library, and ink is rising in the gutters of Highwater. This page is the chapter. The company waits on the stage behind you.' : 'The Tuning Forks have started to sing, and the singers beside them are gone. This page is the chapter. The company waits on the stage behind you.';
-  $('stObj').textContent = st ? st.obj : '';
-  $('stGo').textContent = C.step === 0 ? 'Begin the chapter' : C.step === 4 ? 'Meet the visitor' : C.step === 6 ? 'Begin Chapter II' : C.step === 10 ? 'Hear Isolde out' : C.step >= 12 ? 'Chapter III is not yet written' : 'Continue';
-  $('stGo').disabled = C.step >= 12;
+  $('stSyn').textContent = c2 ? 'A second fork is ringing in the Drowned Library, and ink is rising in the gutters of Highwater. Isolde hears her sister holding on, and the Library is cataloguing everyone.' : 'The Tuning Forks have started to sing, and the singers beside them are gone. Lady Ondine goes down into the Grand Aqueduct to find out who is staging this performance.';
+  $('stObj').textContent = done ? 'Chapter II is complete. The Library has fallen silent, and two forks still ring: the Coral Opera and the Abyssal Cathedral.' : (st ? st.obj : '');
+  $('stGo').textContent = sN === 0 ? 'Begin Chapter I' : sN === 6 ? 'Begin Chapter II' : done ? 'Chapter III is not yet written' : 'Continue: ' + MAIN_BEATS[sN].name;
+  $('stGo').disabled = done;
+  $('stHint').textContent = 'Told on this stage in full visual novel presentation. Each chapter integrates tactical turn-based combat encounters. Click a lit scene on the rail above to replay it.';
+  const forks = Object.keys(save.isle.forks || {}).filter(k => k !== 'hub').length, pages = Object.keys(save.isle.pages || {}).length, bosses = Object.keys(save.isle.bosses || {}).filter(k => save.isle.bosses[k]).length;
+  $('stCoast').innerHTML = `<b>Open World Progress:</b> Tuning Forks ${forks}/4 · Lost Arias ${pages}/12 · Great adversaries ${bosses}/4`;
   $('stTrial').style.display = C.step >= 6 ? '' : 'none';
   $('stTrial2').style.display = C.step >= 12 ? '' : 'none';
   $('stCast').innerHTML = C.party.map(id => {
@@ -13241,18 +13246,31 @@ function renderStory() {
   campFix();
   $('stLvl').textContent = `${C.party.length} in the company · ${C.inv.scores} rehearsal scores still unspent`;
 }
+function startMainVN(sceneId, done, replay) {
+  stopVoice(); VN = null; taleView = 'main';
+  go('vn', { sceneId, replay: !!replay, title: 'THE MAIN STORY', done });
+}
+function playMainBeat(n, replay) {
+  const B = MAIN_BEATS[n]; if (!B) return;
+  const back = () => go('story');
+  const winScene = () => B.win ? startMainVN(B.win, back, replay) : back();
+  startMainVN(B.scenes[0], () => {
+    if (B.battle && !replay) go('battle', { enc: B.battle, title: 'THE MAIN STORY · COMBAT', win: winScene, retreat: back });
+    else winScene();
+  }, replay);
+}
 $('stGo').onclick = () => {
   const C = CAMP(); if (DLG || TR.active) return;
-  if (C.step === 0) playScene('prologue', storyExplore);
-  else if (C.step === 4) playScene('pell', renderStory);
-  else if (C.step === 6) playScene('c2_prologue', storyExplore);
-  else if (C.step === 10) playScene('c2_interlude', renderStory);
-  else if (C.step < 12) storyExplore();
+  if (C.step < 12) playMainBeat(C.step, false);
+};
+$('stExplore').onclick = () => {
+  if (DLG || TR.active) return;
+  taleView = 'main'; startIsle(); go('travel', { from: -1, to: 0, cycle: 1, dur: 2.8, then: 'isle', title: 'The Drowned Isles', sub: 'An expedition beyond the stage' });
 };
 $('stTrial2').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial2', win: () => go('story'), retreat: () => go('story') }); };
 $('stParty').onclick = () => { if (!DLG && !TR.active) go('party'); };
 $('stTrial').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial', win: () => go('story'), retreat: () => go('story') }); };
-$('pickMain').onclick = () => { if (DLG || TR.active) return; taleView = 'main'; renderStory(); sfx('ui'); if (CAMP().step === 4 && !CAMP().seen.pell) playScene('pell', renderStory); else if (CAMP().step === 10 && !CAMP().seen.c2_interlude) playScene('c2_interlude', renderStory); };
+$('pickMain').onclick = () => { if (DLG || TR.active) return; taleView = 'main'; renderStory(); sfx('ui'); };
 $('pickSide').onclick = () => { if (DLG || TR.active) return; taleView = 'side'; renderStory(); sfx('ui'); };
 $('stTales').onclick = showTales;
 $('sideTales').onclick = showTales;
@@ -13270,9 +13288,71 @@ $('sideExplore').onclick = () => {
 // ================= GIRLS' FRONTLINE 2 - ESQUE VN STORY ENGINE =================
 let VN = null;
 
+
+// ---- the main story's own backdrops, told in the same visual-novel style ----
+const MAIN_BEATS = [
+  { name: 'The call', scenes: ['prologue'] },
+  { name: 'The fork', scenes: ['fork'], battle: 'b1', win: 'fork_win' },
+  { name: 'The page', scenes: ['aria'] },
+  { name: 'The shrine', scenes: ['mirelle_meet'], battle: 'b2', win: 'mirelle_win' },
+  { name: 'A visitor', scenes: ['pell'] },
+  { name: 'The Warden', scenes: ['warden_pre'], battle: 'b3', win: 'warden_win' },
+  { name: 'The letter in the ink', scenes: ['c2_prologue'] },
+  { name: 'The fork in the stacks', scenes: ['c2_fork'], battle: 'c2b1', win: 'c2_fork_win' },
+  { name: 'The cards', scenes: ['c2_card'] },
+  { name: 'The shelf', scenes: ['c2_shelf'], battle: 'c2b2', win: 'c2_shelf_win' },
+  { name: 'A listener', scenes: ['c2_interlude'] },
+  { name: 'The Matriarch', scenes: ['c2_boss_pre'], battle: 'c2b3', win: 'c2_boss_win' },
+];
+const MAINVN = {
+  prologue: { bg: 'm_backstage', cast: ['ondine', 'coralie'], music: 'intermission', beat: 0 },
+  fork: { bg: 'm_aqueduct', cast: ['ondine', 'tobias'], music: 'aqueduct', beat: 1 },
+  fork_win: { bg: 'm_aqueduct', cast: ['ondine', 'tobias'], music: 'aqueduct', beat: 1 },
+  aria: { bg: 'm_aqueduct', cast: ['ondine', 'tobias'], music: 'libretto', beat: 2 },
+  mirelle_meet: { bg: 'm_shrine', cast: ['ondine', 'tobias', 'mirelle'], music: 'aqueduct', beat: 3 },
+  mirelle_win: { bg: 'm_shrine', cast: ['ondine', 'mirelle', 'tobias'], music: 'gallery', beat: 3 },
+  pell: { bg: 'm_backstage', cast: ['ondine', 'pell', 'coralie'], music: 'atelier', beat: 4 },
+  warden_pre: { bg: 'm_hall', cast: ['ondine', 'pell', 'tobias'], music: 'boss', beat: 5 },
+  warden_win: { bg: 'm_hall', cast: ['ondine', 'tobias', 'mirelle'], music: 'results', beat: 5 },
+  c2_prologue: { bg: 'm_backstage', cast: ['coralie', 'isolde', 'ondine'], music: 'intermission', beat: 6 },
+  c2_fork: { bg: 'm_library', cast: ['ondine', 'tobias', 'pell'], music: 'library', beat: 7 },
+  c2_fork_win: { bg: 'm_library', cast: ['ondine', 'tobias', 'pell'], music: 'library', beat: 7 },
+  c2_card: { bg: 'm_library', cast: ['ondine', 'pell', 'tobias'], music: 'libretto', beat: 8 },
+  c2_shelf: { bg: 'm_library', cast: ['mirelle', 'ondine'], music: 'library', beat: 9 },
+  c2_shelf_win: { bg: 'm_library', cast: ['mirelle', 'ondine', 'pell'], music: 'gallery', beat: 9 },
+  c2_interlude: { bg: 'm_backstage', cast: ['isolde', 'ondine', 'pell'], music: 'intermission', beat: 10 },
+  c2_boss_pre: { bg: 'm_archive', cast: ['ondine', 'pell', 'mirelle'], music: 'boss', beat: 11 },
+  c2_boss_win: { bg: 'm_archive', cast: ['ondine', 'isolde', 'pell'], music: 'results', beat: 11 },
+};
+function drawMainVNBg(c, key, t) {
+  const w = W, h = H, hz = h * 0.62, rn = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+  const P = {
+    m_backstage: { top: '#150c1c', bot: '#3a2030', lamp: '255,210,150', floor: '#241420', door: 1 },
+    m_aqueduct: { top: '#06142e', bot: '#1b4576', lamp: '130,215,255', floor: '#174a74', arches: 1, water: 1, fork: 1 },
+    m_shrine: { top: '#08141e', bot: '#1d4a58', lamp: '140,230,255', floor: '#14343e', stones: 1, water: 1 },
+    m_hall: { top: '#0a0618', bot: '#2a1a56', lamp: '154,124,255', floor: '#1a1236', arches: 1, bell: 1 },
+    m_library: { top: '#0e0818', bot: '#33244e', lamp: '255,196,130', floor: '#2c1f3e', shelves: 1, pages: 1 },
+    m_archive: { top: '#05030c', bot: '#1a1030', lamp: '212,154,255', floor: '#0e0818', shelves: 1, pages: 1, ink: 1 },
+  }[key] || { top: '#0a0a14', bot: '#1c1c30', lamp: '233,201,138', floor: '#141420' };
+  const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, P.top); g.addColorStop(1, P.bot); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  const fl = c.createLinearGradient(0, hz, 0, h); fl.addColorStop(0, P.floor); fl.addColorStop(1, '#05050a'); c.fillStyle = fl; c.fillRect(0, hz, w, h - hz);
+  if (P.arches) { c.fillStyle = 'rgba(4,8,18,.75)'; for (let i = 0; i < 6; i++) { const x = w * (i + .5) / 6, aw = w / 6 * .8; c.beginPath(); c.moveTo(x - aw / 2, hz); c.lineTo(x - aw / 2, hz - h * .26); c.quadraticCurveTo(x, hz - h * .46, x + aw / 2, hz - h * .26); c.lineTo(x + aw / 2, hz); c.closePath(); c.fill(); const gl = c.createRadialGradient(x, hz - h * .18, 4, x, hz - h * .18, aw * .6); gl.addColorStop(0, `rgba(${P.lamp},.28)`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(x - aw, hz - h * .5, aw * 2, h * .5); c.fillStyle = 'rgba(4,8,18,.75)'; } }
+  if (P.shelves) for (let side = 0; side < 2; side++) for (let i = 0; i < 6; i++) { const sw = w * .075, x = side ? w - (i + 1) * sw * 1.15 : i * sw * 1.15, top = h * (.04 + i * .035), bh = hz - top + h * .02 * i; c.fillStyle = `rgba(${22 + i * 4},${14 + i * 3},${34 + i * 5},.96)`; c.fillRect(x, top, sw, bh); for (let r = 0; r < 14; r++) { const yy = top + 8 + r * (bh / 14); c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x, yy, sw, 2); for (let b = 0; b < 5; b++) { c.fillStyle = `hsla(${(rn(i * 100 + r * 7 + b + side * 50) * 50 + 230) | 0},32%,${14 + rn(r + b) * 12}%,.85)`; c.fillRect(x + 3 + b * (sw - 6) / 5, yy - (bh / 14) * .6, (sw - 6) / 5 - 1, (bh / 14) * .55); } } }
+  if (P.stones) for (let i = 0; i < 5; i++) { const x = w * (.14 + i * .18), sh = h * (.2 + rn(i) * .12); c.fillStyle = 'rgba(6,14,22,.92)'; c.beginPath(); c.roundRect ? c.roundRect(x - w * .03, hz - sh, w * .06, sh, 14) : c.rect(x - w * .03, hz - sh, w * .06, sh); c.fill(); const gl = c.createRadialGradient(x, hz - sh * .6, 2, x, hz - sh * .6, w * .08); gl.addColorStop(0, `rgba(${P.lamp},.35)`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(x - w * .1, hz - sh * 1.3, w * .2, sh * 1.4); }
+  if (P.door) { for (let i = 0; i < 4; i++) { const x = w * (.12 + i * .25); c.fillStyle = 'rgba(10,6,14,.9)'; c.fillRect(x - w * .06, hz - h * .34, w * .12, h * .34); c.strokeStyle = `rgba(${P.lamp},.45)`; c.lineWidth = 2; c.strokeRect(x - w * .06, hz - h * .34, w * .12, h * .34); const gl = c.createRadialGradient(x, hz - h * .4, 2, x, hz - h * .4, w * .09); gl.addColorStop(0, `rgba(${P.lamp},.5)`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(x - w * .1, hz - h * .5, w * .2, h * .2); } c.fillStyle = 'rgba(122,28,44,.5)'; c.fillRect(0, hz + h * .02, w, h * .05); }
+  if (P.bell) { const bx = w * .5, by = h * .12, bh = h * .34; c.fillStyle = 'rgba(8,4,20,.9)'; c.beginPath(); c.moveTo(bx - bh * .2, by + bh * .1); c.quadraticCurveTo(bx - bh * .2, by - bh * .05, bx, by - bh * .1); c.quadraticCurveTo(bx + bh * .2, by - bh * .05, bx + bh * .2, by + bh * .1); c.lineTo(bx + bh * .38, by + bh * .7); c.quadraticCurveTo(bx, by + bh * .78, bx - bh * .38, by + bh * .7); c.closePath(); c.fill(); c.strokeStyle = `rgba(${P.lamp},${.4 + .2 * Math.sin(t * 2)})`; c.lineWidth = 3; c.stroke(); }
+  if (P.fork) { const fx = w * .5, fy = hz, fh = h * .34, pu = .5 + .5 * Math.sin(t * 2.4); c.strokeStyle = `rgba(196,150,70,.95)`; c.lineWidth = Math.max(6, w * .012); c.lineCap = 'round'; c.beginPath(); c.moveTo(fx - fh * .12, fy - fh); c.lineTo(fx - fh * .12, fy - fh * .3); c.quadraticCurveTo(fx, fy - fh * .12, fx + fh * .12, fy - fh * .3); c.lineTo(fx + fh * .12, fy - fh); c.moveTo(fx, fy - fh * .14); c.lineTo(fx, fy); c.stroke(); const gl = c.createRadialGradient(fx, fy - fh * .65, 4, fx, fy - fh * .65, fh * .8); gl.addColorStop(0, `rgba(${P.lamp},${.22 + .2 * pu})`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(fx - fh, fy - fh * 1.5, fh * 2, fh * 1.6); c.strokeStyle = `rgba(${P.lamp},${.4 * (1 - pu)})`; c.lineWidth = 2; for (let k = 1; k < 4; k++) { c.beginPath(); c.arc(fx, fy - fh * .65, fh * (.2 + k * .22 + pu * .08), 0, TAU); c.stroke(); } }
+  if (P.water) { for (let i = 0; i < 18; i++) { const yy = hz + 6 + i * (h - hz) / 18, wob = Math.sin(t * 1.3 + i * 1.7) * 12; c.strokeStyle = `rgba(${P.lamp},${.06 + .05 * Math.sin(t + i)})`; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, yy); for (let x = 0; x <= w; x += 40) c.lineTo(x, yy + Math.sin(x * .012 + t * 1.5 + i) * 2.5 + wob * .1); c.stroke(); } }
+  if (P.ink) { const ig = c.createRadialGradient(w * .5, hz + h * .12, 10, w * .5, hz + h * .12, w * .5); ig.addColorStop(0, 'rgba(10,4,24,.95)'); ig.addColorStop(1, 'rgba(10,4,24,0)'); c.fillStyle = ig; c.fillRect(0, hz - h * .05, w, h * .45); for (let i = 0; i < 30; i++) { const x = rn(i + 3) * w, y = h - ((t * (14 + rn(i) * 20) + rn(i + 9) * h) % (h * .6)); c.fillStyle = `rgba(${P.lamp},${.15 + rn(i + 5) * .3})`; c.fillRect(x, y, 2, 2 + rn(i + 7) * 6); } }
+  if (P.pages) for (let i = 0; i < 22; i++) { const x = (rn(i) * w + Math.sin(t * .4 + i) * 30), y = h - ((t * (10 + rn(i + 2) * 16) + rn(i + 1) * h) % h), a = Math.sin(t * .7 + i) * .5; c.save(); c.translate(x, y); c.rotate(a); c.fillStyle = `rgba(236,222,190,${.12 + rn(i + 4) * .14})`; c.fillRect(-9, -12, 18, 24); c.restore(); }
+  for (const lx of [.1, .9]) { const gl = c.createRadialGradient(w * lx, h * .22, 4, w * lx, h * .22, w * .3); gl.addColorStop(0, `rgba(${P.lamp},.13)`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(0, 0, w, h); }
+  const vg = c.createRadialGradient(w / 2, h * .5, h * .35, w / 2, h * .5, h * .95); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.6)'); c.fillStyle = vg; c.fillRect(0, 0, w, h);
+}
+
 function drawVNBg(c, bgKey, t) {
   c.save();
   const w = W, h = H;
+  if (String(bgKey).startsWith('m_')) { drawMainVNBg(c, bgKey, t); c.restore(); return; }
   switch (bgKey) {
     case 'side0': {
       // Stormy Night at Brinegate Portcullis & Sea Gate
@@ -15682,7 +15762,8 @@ function startVNSideStory(sceneId, done) {
 
 function startVN(opts = {}) {
   const sceneId = opts.sceneId || 'side0';
-  const num = parseInt(sceneId.replace('side', ''), 10) || 0;
+  const MV = MAINVN[sceneId];
+  const num = MV ? MV.beat : (parseInt(sceneId.replace('side', ''), 10) || 0);
   const lines = SCRIPT[sceneId];
   if (!lines) {
     if (opts.done) opts.done();
@@ -15707,7 +15788,7 @@ function startVN(opts = {}) {
     side57: 'cathedral', side58: 'recital', side59: 'gallery', side60: 'boss', side61: 'libretto', side62: 'intermission', side63: 'gallery',
     side64: 'cathedral', side65: 'gallery', side66: 'aqueduct', side67: 'boss', side68: 'boss', side69: 'recital', side70: 'results'
   };
-  playMusic(SCENE_MUSIC[sceneId] || 'intermission');
+  playMusic(MV ? MV.music : (SCENE_MUSIC[sceneId] || 'intermission'));
 
   VN = {
     sceneId,
@@ -15722,7 +15803,9 @@ function startVN(opts = {}) {
     skip: false,
     log: [],
     showLog: false,
-    bg: sceneId,
+    bg: MV ? MV.bg : sceneId,
+    main: !!MV,
+    replay: !!opts.replay,
     cast: []
   };
 
@@ -15795,7 +15878,7 @@ function startVN(opts = {}) {
     side70: ['ilario', 'violetta', 'eliane', 'gervais', 'sirelle', 'emilia']
   };
 
-  const initList = INIT_CAST[sceneId] || ['ilario'];
+  const initList = MV ? MV.cast : (INIT_CAST[sceneId] || ['ilario']);
   const n = initList.length;
   VN.cast = initList.map((id, idx) => {
     const tx = n === 1 ? W * 0.5 : n === 2 ? (idx === 0 ? W * 0.32 : W * 0.68) : n === 3 ? (idx === 0 ? W * 0.22 : idx === 1 ? W * 0.50 : W * 0.78) : (W * (0.15 + (idx / Math.max(1, n - 1)) * 0.70));
@@ -15817,7 +15900,8 @@ function startVN(opts = {}) {
   const chRoman = num < 8 ? 'CH. I' : num < 15 ? 'CH. II' : num < 22 ? 'CH. III' : num < 29 ? 'CH. IV' : num < 36 ? 'CH. V [PART 1 CLIMAX]' : num < 43 ? 'CH. VI' : num < 50 ? 'CH. VII' : num < 57 ? 'CH. VIII' : num < 64 ? 'CH. IX' : 'CH. X [PART 2 GRAND CLIMAX]';
   const beatTitle = SIDE_BEATS[num] || 'THE UNDERSTUDIES';
   const epNum = String(num + 1).padStart(2, '0');
-  $('vnTitle').textContent = `EPISODE ${epNum} // ${chRoman} // ${beatTitle.toUpperCase()}`;
+  { const vc = document.querySelector('.vn-chapter'); if (vc) vc.textContent = MV ? 'TIDEBOUND CORRIDOR' : 'TIDEBOUND: THE UNDERSTUDIES'; }
+  $('vnTitle').textContent = MV ? `THE MAIN STORY // ${num >= 6 ? 'CH. II' : 'CH. I'} // ${MAIN_BEATS[num].name.toUpperCase()}` : `EPISODE ${epNum} // ${chRoman} // ${beatTitle.toUpperCase()}`;
 
   $('sc-vn').classList.remove('ui-hidden');
   $('vnAuto').classList.remove('active');
@@ -15833,7 +15917,7 @@ function startVN(opts = {}) {
 }
 
 function vnEnsureActor(who) {
-  const V = VN; if (!V || !who || who === 'narrator' || !COMP[who]) return;
+  const V = VN; if (!V || !who || who === 'narrator' || (!COMP[who] && who !== 'ondine')) return;
   let found = false;
   for (let i = 0; i < V.cast.length; i++) {
     if (V.cast[i].id === who) { found = true; break; }
@@ -15903,6 +15987,17 @@ function vnShowLine(L) {
     ignis: '// FORGE-MASTER · THE MIRROR FOUNDRY',
     malachai: '// PRELATE · OBSIDIAN CHORUS',
     thalassos: '// SOVEREIGN EMPEROR · CAELUM VITREUM',
+    ondine: '// SOLOIST · THE TIDE OPERA',
+    coralie: '// DIRECTRESS · TIDE OPERA HOUSE',
+    tobias: '// STAGEHAND · BRASS',
+    mirelle: '// DROWNED CHORISTER · CHOIR',
+    pell: '// APPRENTICE CONDUCTOR · BRASS',
+    isolde: '// FIRST SOPRANO · THE AQUEDUCT FORK',
+    verrine: '// CONTRALTO · THE LIBRARY FORK',
+    warden: '// THE ABYSSAL WARDEN',
+    kraken: '// ARCHIVIST · THE KRAKEN MATRIARCH',
+    voice: '// A VOICE IN THE FORK',
+    card: '// CATALOGUE CARD',
     extra: '// GUILD HIRE',
     narrator: '// ARCHIVE CHRONICLE · NARRATIVE RECORD'
   };
@@ -15957,6 +16052,7 @@ function vnPick(L, i) {
   const V = VN; if (!V || !V.choosing) return;
   const o = L.choice[i]; if (!o) return;
   sfx('legend');
+  if (o.rel && !V.replay) for (const k in o.rel) CAMP().rel[k] = (CAMP().rel[k] || 0) + o.rel[k];
   V.choosing = false;
   const wrap = $('vnChoicesWrap');
   wrap.classList.add('hidden');
@@ -15984,6 +16080,7 @@ function vnNext() {
 function vnEnd() {
   stopVoice();
   const cb = VN ? VN.done : null;
+  if (VN && VN.main) { VN = null; if (cb) cb(); else go('story'); return; }
   VN = null;
   go('story', {
     title: 'BRINEGATE CHRONICLES',
@@ -20132,7 +20229,7 @@ function onModeEnter(m, opts) {
   if (m !== 'wish' && $('wishShow')) $('wishShow').classList.add('hidden');
   if (m === 'settings') renderSettings();
   if (m === 'vn') { startVN(opts); }
-  if (m === 'story') { renderStory(); if (taleView === 'main' && CAMP().step === 4 && !CAMP().seen.pell) playScene('pell', renderStory); }
+  if (m === 'story') { renderStory(); }
   if (m === 'party') renderParty();
   if (m === 'chars') { CH.a = 0; CH.v = 0; renderChars(); }
   if (m === 'house') {
