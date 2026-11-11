@@ -2087,6 +2087,7 @@
       <button class="btn" id="stTrial" style="display:none">Face the Warden again</button>
       <button class="btn" id="stTrial2" style="display:none">Face the Matriarch again</button>
       <button class="btn" id="stTrial3" style="display:none">Face the Conductor again</button>
+      <button class="btn" id="stTrial4" style="display:none">Face the Leviathan again</button>
     </div>
     <div class="hint" id="stCoast" style="font:italic 600 14px var(--serif);color:#efd39a;margin-top:8px"></div>
     <div class="hint" id="stHint"></div>
@@ -9785,7 +9786,7 @@ const SPEAK = {
   ilario: ['Ilario Vale', '#f0d0c8'], eliane: ['Eliane', '#ffe0b0'], violetta: ['Violetta', '#d0a0ff'], gervais: ['Gervais', '#e8d8b0'],
   sirelle: ['Sirelle', '#b8e4f4'], emilia: ['Madame Emiline', '#e9c98a'], chief: ['Harbour-Master Brine', '#e0c898'], cue: ['The Masked Cue', '#ff8090'], extra: ['A hireling', '#c8c0b0'],
   conductor: ['The Crimson Conductor', '#ff6b81'],
-  verrine: ['Verrine', '#a8d0ff'], oriel: ['Oriel', '#ffb0c8'], phantom: ['The Phantom Conductor', '#9a8aff'], kraken: ['The Kraken Matriarch', '#d49aff'], card: ['A catalogue card', '#e9c98a'],
+  verrine: ['Verrine', '#a8d0ff'], oriel: ['Oriel', '#ffb0c8'], cielle: ['Cielle', '#bff4ff'], leviathan: ['The Hollow Leviathan', '#5ad8ff'], founder: ['A First Cantor', '#d8c28a'], phantom: ['The Phantom Conductor', '#9a8aff'], kraken: ['The Kraken Matriarch', '#d49aff'], card: ['A catalogue card', '#e9c98a'],
   impresario: ['Arch-Cantor Valerius', '#ffd84a'],
   colossus: ['The Sovereign Colossus', '#ff7850'],
   morcant: ['Lord Morcant', '#7ed6df'],
@@ -9943,10 +9944,16 @@ const STORY_STEPS = [
   { obj: 'Cross the tide-pool where the audience gathers.', where: 'isle', at: () => axisPt(2, 41, -8), ev: 'c3_reef' },
   { obj: 'Return backstage: the company needs a plan for a held note.', where: 'hub' },
   { obj: 'Confront the Phantom Conductor at the Podium.', where: 'isle', at: () => axisPt(2, 47, 0), ev: 'c3_boss_pre' },
-  { obj: 'Chapter III is complete. The story continues in Chapter IV.', where: 'done' },
+  { obj: 'Chapter III is complete. Begin Chapter IV: the last fork rings from the Abyssal Cathedral.', where: 'hub' },
+  { obj: 'Descend to the singing Tuning Fork in the Abyssal Cathedral.', where: 'isle', at: () => axisPt(3, 27, 3.2), ev: 'c4_fork' },
+  { obj: 'Follow the lullaby carved along the nave.', where: 'isle', at: () => axisPt(3, 35, 12), ev: 'c4_nave' },
+  { obj: 'Cross the crypt of the First Choral Dynasty.', where: 'isle', at: () => axisPt(3, 41, -8), ev: 'c4_crypt' },
+  { obj: 'Gather the four voices at the Cathedral door.', where: 'hub' },
+  { obj: 'Face the Hollow Leviathan in the sunken apse.', where: 'isle', at: () => axisPt(3, 47, 0), ev: 'c4_boss_pre' },
+  { obj: 'The main story is complete. The Understudies’ tale continues in the side story.', where: 'done' },
 ];
-const CH_TITLES = ['The Voice Beneath the Aqueduct', 'The Ink That Does Not Dry', 'The Held Note'];
-const chOf = n => n >= 12 ? 3 : n >= 6 ? 2 : 1;
+const CH_TITLES = ['The Voice Beneath the Aqueduct', 'The Ink That Does Not Dry', 'The Held Note', 'The Hollow Below'];
+const chOf = n => n >= 18 ? 4 : n >= 12 ? 3 : n >= 6 ? 2 : 1;
 function setStep(n) { if (n <= CAMP().step) return; CAMP().step = n; persist(); if (mode === 'isle' && S && STORY_STEPS[n]) { S.banner = 'New objective'; S.sub = STORY_STEPS[n].obj; S.bannerT = 3.2; } }
 function setSide(n) { save.side.step = Math.max(save.side.step || 0, n); persist(); }
 function recruit(id) { const C = CAMP(); if (!C.party.includes(id)) C.party.push(id); campFix(); persist(); sfx('legend'); }
@@ -10096,7 +10103,7 @@ const SCRIPT = {
     ['isolde', 'The other three forks are still ringing: the Library, the Coral Opera, the Cathedral. I can hear my sisters holding their notes.'],
     ['ondine', 'Then that is where we go next.'],
     ['isolde', 'When you do, listen for the lowest note in each chord. Whatever sleeps down there is listening for it too.'],
-    { if: () => CAMP().step >= 18, then: [['narrator', 'Three forks are free. Only the Abyssal Cathedral still rings. Chapter IV is still being written.']], else: [['narrator', CAMP().step >= 12 ? 'Another fork is ringing in the Coral Opera. Chapter III is on the Story page.' : 'Another fork is ringing in the Drowned Library. Chapter II is on the Story page.']] },
+    { if: () => CAMP().step >= 24, then: [['narrator', 'All four forks are open, and the Hollow Leviathan sleeps because it chose to. The Tide Opera has a very full company.']], else: [['narrator', CAMP().step >= 18 ? 'The last fork is ringing in the Abyssal Cathedral. Chapter IV is on the Story page.' : CAMP().step >= 12 ? 'Another fork is ringing in the Coral Opera. Chapter III is on the Story page.' : 'Another fork is ringing in the Drowned Library. Chapter II is on the Story page.']] },
   ],
 };
 Object.assign(SCRIPT, {
@@ -10301,7 +10308,127 @@ Object.assign(SCRIPT, {
     ['tobias', 'I vote we do not keep it waiting on a held note.'],
     ['ondine', 'Come home, Oriel. The Tide Opera has a very large stage, and the front row is empty.'],
     { act: () => { setStep(18); if (!CAMP().flags.chapter3) { CAMP().flags.chapter3 = true; if (save.wish) save.wish.pearls = (save.wish.pearls || 0) + 100; persist(); showToast('Chapter III Complete', '100 Tide Pearls and a rave review', 'The held note ends.'); award('chapter3'); } } },
-    ['narrator', 'Chapter III complete. 100 Tide Pearls and the review’s payout. A boss trial against the Conductor is open backstage. The Abyssal Cathedral is next. Chapter IV is still being written.'],
+    ['narrator', 'Chapter III complete. 100 Tide Pearls and the review’s payout. A boss trial against the Conductor is open backstage. The Abyssal Cathedral is next.'],
+  ],
+});
+
+
+Object.assign(SCRIPT, {
+  c4_prologue: [
+    ['narrator', 'The water in Port Highwater has drawn back from the harbour wall like a held breath. Down in the deep, a bell is tolling that no one built.'],
+    ['isolde', 'The last fork. I can hear her, high above all of us. She is the one the chord was written around.'],
+    ['verrine', 'Three of four. The lullaby is thin as a thread. Whatever sleeps below has stopped turning over.'],
+    ['oriel', 'It is listening. I have felt it listening for a hundred years.'],
+    ['ondine', 'Madame. The Cathedral is twelve thousand fathoms down. How do we get there?'],
+    ['coralie', 'I told you, a long time ago, that a stage you did not build has trapdoors you cannot see. I never said I did not build this one.'],
+    ['narrator', 'Coralie draws back the great red curtain on the Tide Opera’s oldest stage, and kicks aside a board. Beneath it, a spiral stair descends into green light.'],
+    ['tobias', 'Twenty years I have been rigging this stage, and you have a trapdoor to the bottom of the sea.'],
+    ['coralie', 'The Tide Opera was never only an opera house. It was the lid on the box.'],
+    { choice: [
+      { t: 'Then we open it, and do it better.', then: [['coralie', 'That was always the plan. I only needed a diva who would not take the lid for the whole show.']] },
+      { t: 'Madame, why did you not tell me sooner?', rel: { pell: 1 }, then: [['coralie', 'Because no one would have walked down the stairs if I had said what was at the bottom. Now you know, and you are walking anyway.']] },
+    ] },
+    ['pell', 'I have a rest written. Whatever it is, I can take a breath with it.'],
+    { act: () => setStep(19) },
+    ['narrator', 'The company descends the stair beneath the stage, toward the Abyssal Cathedral.'],
+  ],
+  c4_fork: [
+    ['narrator', 'The Abyssal Cathedral is a gothic sanctuary of black stone and green fire, twelve thousand fathoms down, built over something that is not stone. The last fork stands at the head of the nave, wrapped in prayer-chains.'],
+    ['cielle', 'Hush. It is nearly asleep. If it wakes now, it wakes hungry, and I cannot hold the note alone.'],
+    ['isolde', 'Cielle. It is us. We came.'],
+    ['cielle', 'Isolde? That is not possible. You are free? You were the lowest voice. If you are free, the chord is broken, and the Cathedral is—'],
+    ['narrator', 'The bell tolls above the nave, and hollow acolytes rise from their kneeling-stones with censers and bells in their ribs.'],
+    ['pell', 'They keep the cage tight. They heard us sing. Mirelle, with me.'],
+    ['mirelle', 'I have not sung in this room since I was alive.'],
+    ['narrator', 'A battle begins. The Cathedral’s choir will not let the last fork go quietly.'],
+  ],
+  c4_fork_win: [
+    ['cielle', 'You broke the clamps. You really did. I am Cielle, the highest voice, and I have been holding one note over the sleeper for five hundred years.'],
+    ['ondine', 'What is it that sleeps?'],
+    ['cielle', 'It is not a monster. They told us it was a monster, so we would hold the note. It is a listener. The very first listener, older than the dynasty, older than the song. It was only ever waiting for someone to sing it to the end.'],
+    ['isolde', 'The First Choral Dynasty never finished the lullaby. It was afraid of the last bar.'],
+    ['cielle', 'They were afraid of what it would do if it was finished for. So they cut the last bar out of the score, and sealed four of us inside bronze to sing the rest, forever, to something that was never allowed to hear the ending.'],
+    ['tobias', 'And here I was, thinking the stagehands had a hard job.'],
+    ['cielle', 'The nave is carved with the whole lullaby. The last bar is gone. You will have to find what they did with it.'],
+    { act: () => setStep(20) },
+  ],
+  c4_nave: [
+    ['narrator', 'Along both walls of the nave, the lullaby has been carved in a spiral of black stone notes, thousands of them, climbing toward the vault. At the very end, the last bar has been chiselled out. The scar is old, and the stone around it has gone smooth, as though many hands have touched it.'],
+    ['ondine', 'Someone stood here for a long time.'],
+    ['mirelle', 'Every one of the chorus did. We were told to touch it, and say the lullaby was perfect without its end.'],
+    ['card', 'It does not hunger for voices. It hungers for an ending. A song never finished is a wound. Sing it to the last bar, and it will sleep, because it chooses to.'],
+    { act: () => { CAMP().flags.knowsLeviathan = true; } },
+    ['narrator', 'You learned the Hollow Leviathan’s pattern. In battle, you will see what it plans next, and the last bar will quiet it.'],
+    ['pell', 'It is a rest, Ondine. The missing bar is a rest. I have been writing for a hundred years the thing they cut out.'],
+    ['tobias', 'Then we do not need to kill it. We need to finish the piece.'],
+    ['ondine', 'Then we do not need a better weapon. We need a better ending.'],
+    { act: () => setStep(21) },
+  ],
+  c4_crypt: [
+    ['narrator', 'Below the nave lies the crypt of the First Choral Dynasty. Eleven founders sit in stone chairs with their hands folded, and each one has the same blank, hollow face.'],
+    ['founder', 'WHO WALKS ON THE LAST BAR? THE BAR WAS CUT FOR A REASON. A SONG THAT ENDS WAKES WHAT SLEEPS.'],
+    ['ondine', 'A song that never ends is what has kept it from sleeping. You were afraid of a finished song, and you called it holy.'],
+    ['founder', 'ONE FIVE-HUNDRED-YEAR SLEEP IS WORTH FOUR VOICES. THE ARITHMETIC IS SIMPLE.'],
+    ['isolde', 'Four people, who were never asked.'],
+    ['founder', 'THEN WE WILL ASK YOU TO STAY.'],
+    ['narrator', 'The founders rise, and the crypt fills with first cantors, their robes weighed with five centuries of bronze.'],
+    ['narrator', 'A battle begins. The dynasty will not unmake its work willingly.'],
+  ],
+  c4_crypt_win: [
+    ['founder', 'THE LULLABY… IT IS HEAVY. WE NEVER KNEW IT WAS SO HEAVY.'],
+    ['narrator', 'The founders’ hands unfold, one by one, and the stone chairs turn quietly to dust.'],
+    ['mirelle', 'They were afraid. That is all it ever was. Five hundred years of fear, dressed as a vow.'],
+    { choice: [
+      { t: 'Fear is not the same as wrong. But it was never kind.', rel: { mirelle: 1 }, then: [['mirelle', 'No. It was never kind. Thank you for not making them monsters.']] },
+      { t: 'They are free of it now, at least.', then: [['mirelle', 'Yes. I hope the dust remembers a tune.']] },
+    ] },
+    { act: () => { if (!CAMP().flags.c4CryptLoot) { CAMP().flags.c4CryptLoot = true; const got = grantLoot({ scores: 4, keeps: 1 }); showToast('Left in the crypt', 'You found', got.join(' · ')); } } },
+    { act: () => setStep(22) },
+    ['narrator', 'The company returns to the head of the nave, where four forks wait.'],
+  ],
+  c4_interlude: [
+    ['cielle', 'Four of us, and the fifth part is you, Ondine. The chord was written for four voices and a listener. Not a listener below. A listener beside us.'],
+    ['isolde', 'Low, and Verrine above me. Then Oriel. Then Cielle, the highest.'],
+    ['verrine', 'We sing it together, not as bronze, not because we are held. Because we choose to.'],
+    ['oriel', 'And when the last bar comes, we do not stop. We take the rest, together.'],
+    ['pell', 'Four beats, and the fifth is mine. I wrote it down. I will conduct it.'],
+    ['tobias', 'And I will keep the scenery off your heads.'],
+    ['mirelle', 'And I will sing beside you, in the third row, where I always sat.'],
+    ['ondine', 'Then let us give a sleeping child a lullaby it can finish.'],
+    ['narrator', 'The four voices and one soloist take the first note of the chord together, and for the first time in five hundred years the Cathedral hums in tune. Far below, something vast hears it and begins to wake.'],
+    { act: () => setStep(23) },
+    ['narrator', 'The company walks down the sunken apse, toward the thing that has listened for five hundred years.'],
+  ],
+  c4_boss_pre: [
+    ['narrator', 'The apse of the Abyssal Cathedral opens on nothing: a great round hollow in the floor of the trench, a hundred fathoms wide, rimmed with chains. Something is rising out of it, vast, patient and hollow.'],
+    ['leviathan', '…'],
+    ['pell', 'It is not angry. Listen to its pulse. It is a heartbeat, with a bar missing at the end.'],
+    ['ondine', 'We are not here to put you to sleep. We are here to finish the song.'],
+    ['leviathan', '…'],
+    ['tobias', 'I do not think it believes us.'],
+    ['mirelle', 'Why would it? Every time someone sang to it, they stopped before the end.'],
+    ['isolde', 'Then we do not stop. Together, everyone. On Pell’s beat.'],
+    ['narrator', 'Boss battle: the Hollow Leviathan. It announces its next move before it strikes. Weather its blows, break its hollow shell, and hold the last bar until it comes.'],
+  ],
+  c4_boss_win: [
+    ['narrator', 'The Leviathan does not fall. It slows. Its hollow shell cracks open like a seed, and out of it pours a soft green light, and the shape of a very old, very tired listener, curling down into the dark.'],
+    ['leviathan', '…is it… the end?'],
+    ['ondine', 'It is the end of the lullaby. It is not the end of you. You may sleep now, and wake when you choose.'],
+    ['narrator', 'The four voices sing the last bar together. Pell lowers his baton on the rest. For one long breath, the whole Cathedral is silent, and it is the best silence anyone has ever heard.'],
+    ['leviathan', 'Thank you.'],
+    ['narrator', 'The Hollow Leviathan sinks into the trench, the way a child sinks into a bed that is finally its own. The prayer-chains fall from the four forks, and the bronze splits open like blossoms.'],
+    ['cielle', 'I can breathe. I can… walk.'],
+    ['isolde', 'Sisters.'],
+    ['verrine', 'We are free. All of us. And it chose to sleep.'],
+    ['oriel', 'It is a better ending than the one we were sealed in.'],
+    ['coralie', 'A stage you did not build has trapdoors you cannot see. This one, at least, opened where it was meant to.'],
+    ['tobias', 'Nobody bills a show they intend to finish. We finished it.'],
+    ['pell', 'I wrote the rest. I conducted it. It held.'],
+    ['mirelle', 'It held.'],
+    ['ondine', 'Isolde, Verrine, Oriel, Cielle. Come home. The Tide Opera has a very large stage, and the whole company is on it.'],
+    { act: () => { setStep(24); if (!CAMP().flags.chapter4) { CAMP().flags.chapter4 = true; if (save.wish) save.wish.pearls = (save.wish.pearls || 0) + 150; persist(); showToast('Chapter IV Complete', '150 Tide Pearls and a rave review', 'The lullaby is finished.'); award('chapter4'); } } },
+    ['narrator', 'The tide rises over Port Highwater, and the lamps along the harbour come on one by one. Far down the coast, in the pier-hamlet of Brinegate, a night-watchman looks up from his post at the glow on the water, and wonders who is singing.'],
+    ['narrator', 'Chapter IV complete. 150 Tide Pearls and the review’s payout. A boss trial against the Hollow Leviathan is open backstage. The Tide Opera’s story is complete. The Understudies’ tale continues in the side story.'],
   ],
 });
 
@@ -11424,6 +11551,7 @@ Object.assign(SCRIPT, {
   ],
 
 });
+REVIEWS.push({ id: 'chapter4', head: 'The Last Bar', quote: '“A lullaby, finally, with an ending.”', paper: 'The Abyssal Courier', how: 'Complete Chapter IV of the Story.', reward: 800 });
 REVIEWS.push({ id: 'chapter3', head: 'The Rest', quote: '“He never learned to let a song end. They taught him.”', paper: 'The Coral Courier', how: 'Complete Chapter III of the Story.', reward: 700 });
 REVIEWS.push({ id: 'chapter2', head: 'Unfiled', quote: '“A voice that repeats is a catalogue. A voice that changes is a song.”', paper: 'The Highwater Chronicle', how: 'Complete Chapter II of the Story.', reward: 600 });
 REVIEWS.push({ id: 'chapter1', head: 'A Voice Set Free', quote: '“The first soprano sings again.”', paper: 'The Tidewater Gazette', how: 'Complete Chapter I of the Story.', reward: 500 });
@@ -11499,6 +11627,11 @@ const HEROES = {
 const FOES = {
   chorister: { name: 'Drowned Chorister', art: 'wraith', hp: 125, atk: 13, def: 5, spd: 92, tough: 30, weak: ['tide', 'brass'] },
   hound: { name: 'Bilge Hound', art: 'runner', hp: 80, atk: 11, def: 3, spd: 122, tough: 20, weak: ['choir'] },
+  hollow_acolyte: { name: 'Hollow Acolyte', art: 'cantor', hp: 220, atk: 19, def: 10, spd: 92, tough: 42, weak: ['tide', 'choir'] },
+  abyss_usher: { name: 'Abyss Usher', art: 'shielder', hp: 250, atk: 20, def: 16, spd: 84, tough: 50, weak: ['brass', 'tide'] },
+  trench_siren: { name: 'Trench Siren', art: 'wraith', hp: 195, atk: 20, def: 8, spd: 100, tough: 38, weak: ['brass', 'choir'] },
+  first_cantor: { name: 'First Cantor', art: 'brute', hp: 310, atk: 22, def: 14, spd: 86, tough: 55, weak: ['choir', 'brass'] },
+  hollow_leviathan: { name: 'The Hollow Leviathan', boss: true, bossId: 'leviathan', hp: 3000, atk: 34, def: 15, spd: 100, tough: 130, weak: ['tide', 'choir', 'brass'], plan: ['tidal_slam', 'hollow_wail', 'undertow', 'last_bar'] },
   coral_usher: { name: 'Anemone Usher', art: 'shielder', hp: 200, atk: 17, def: 12, spd: 88, tough: 42, weak: ['tide', 'choir'] },
   reef_siren: { name: 'Reef Siren', art: 'wraith', hp: 170, atk: 17, def: 7, spd: 98, tough: 36, weak: ['brass', 'tide'] },
   reef_hound: { name: 'Reef Hound', art: 'runner', hp: 105, atk: 13, def: 4, spd: 126, tough: 22, weak: ['choir'] },
@@ -11536,6 +11669,10 @@ const ENCS = {
   b3: { party: null, foes: ['warden'], music: 'boss', boss: true, name: 'The Abyssal Warden' },
   c2b1: { party: null, foes: ['ink_wraith', 'ink_hound', 'ink_wraith'], music: 'aqueduct', name: 'Pages on the Move' },
   c2b2: { party: null, foes: ['ink_scribe', 'ink_hound', 'ink_scribe'], music: 'aqueduct', name: 'The Re-shelving' },
+  c4b1: { party: null, foes: ['hollow_acolyte', 'abyss_usher', 'trench_siren'], music: 'cathedral', name: 'The Cathedral Choir' },
+  c4b2: { party: null, foes: ['first_cantor', 'trench_siren', 'first_cantor'], music: 'cathedral', name: 'The First Choral Dynasty' },
+  c4b3: { party: null, foes: ['hollow_leviathan'], music: 'boss', boss: true, name: 'The Hollow Leviathan' },
+  trial4: { party: null, foes: ['hollow_leviathan'], music: 'boss', boss: true, trial: true, name: 'Boss Trial: The Leviathan Returns' },
   c3b1: { party: null, foes: ['coral_usher', 'reef_siren', 'reef_hound'], music: 'aqueduct', name: 'The House Rises' },
   c3b2: { party: null, foes: ['reef_siren', 'coral_usher', 'reef_siren'], music: 'aqueduct', name: 'The Front Rows' },
   c3b3: { party: null, foes: ['phantom_conductor'], music: 'boss', boss: true, name: 'The Phantom Conductor' },
@@ -11637,7 +11774,7 @@ function startBattle(opts) {
     if (mut.id === 'allegro') for (const u of units) { u.spd = Math.round(u.spd * 1.15); if (u.side === 'ally') u.crit = (u.crit || 10) + 15; }
   }
   BT = { E, opts, units, res, harmony: 3, maxH: 5, cur: null, phase: 'start', anim: null, finq: [], texts: [], banner: { txt: opts.spire ? `Floor ${opts.spireFloor} · ${E.name}` : E.name, sub: E.boss ? 'A great adversary takes the stage' : 'The company takes its places', t: 2.2 },
-    target: null, allyTarget: null, wait: 1.2, tipI: 0, tipT: 0, preview: null, graceUsed: false, knows: !!(CAMP().flags.knowsWarden || CAMP().flags.knowsKraken || CAMP().flags.knowsConductor), shake: 0, ended: false, finSig: '', slashes: [], fg: null, fgT: 1, fgScreen: null,
+    target: null, allyTarget: null, wait: 1.2, tipI: 0, tipT: 0, preview: null, graceUsed: false, knows: !!(CAMP().flags.knowsWarden || CAMP().flags.knowsKraken || CAMP().flags.knowsConductor || CAMP().flags.knowsLeviathan), shake: 0, ended: false, finSig: '', slashes: [], fg: null, fgT: 1, fgScreen: null,
     speed: save.settings.battleSpeed || 1, autoPlay: !!save.settings.battleAuto, autoTimer: 0 };
   if (opts.house) egBtScale(units, opts.house);
   for (const u of units) u.av = baseAV(u) * (u.side === 'ally' ? 0.85 * (1 - ((u.fx && u.fx.advStart) || 0)) : 1);
@@ -12189,6 +12326,30 @@ function foeAct(u) {
     else if (act === 'golden_orbs') btAnim(u, 'Golden Metronomes', () => { btShield(u, 440, 2); u.buffs.dmgUp = 2; btText(u, 'Golden Metronomes', '#ffd070', 16); sfx('power'); }, done, { tgt: u, kind: 'cast' });
     else if (act === 'phantom_tempo') btAnim(u, 'Phantom Tempo', () => { for (const a of btAllies()) { btHit(u, a, 1.1); if (a.alive) a.buffs.weak = 2; } BT.shake = 0.7; sfx('ariaR'); }, done, { tgt: t, dur: 1.2 });
     else btAnim(u, 'THE HELD NOTE', () => { for (const a of btAllies()) btHit(u, a, 2.0); BT.shake = 1.3; S.flash = 0.5; sfx('phase'); }, done, { tgt: t, kind: 'melee', dur: 1.4, at: 0.7 });
+  } else if (u.key === 'hollow_acolyte') {
+    const t = pickAlly();
+    if (Math.random() < 0.4) btAnim(u, 'Censer Smoke', () => { for (const a of btAllies()) btHit(u, a, 0.55); if (t && t.alive) { t.buffs.weak = 2; btText(t, 'Choked: weakened', '#ff7a8a', 15); } }, done, { tgt: t });
+    else btAnim(u, 'Hollow Hymn', () => btHit(u, t, 1.05), done, { tgt: t });
+  } else if (u.key === 'abyss_usher') {
+    const t = pickAlly();
+    if (Math.random() < 0.4) btAnim(u, 'Pew-Wall', () => { btShield(u, 280, 2); btText(u, 'Pew-Wall', '#5affd8', 15); sfx('power'); }, done, { tgt: u, kind: 'cast' });
+    else btAnim(u, 'Verger’s Staff', () => { btHit(u, t, 1.4, { tough: 15 }); }, done, { tgt: t, kind: 'melee' });
+  } else if (u.key === 'trench_siren') {
+    const t = pickAlly();
+    if (Math.random() < 0.35) btAnim(u, 'Pressure Chord', () => { for (const a of btAllies()) btHit(u, a, 0.6); if (t && t.alive) { t.buffs.damp = 2; btText(t, 'Crushed: −20% damage', '#c8a0ff', 15); } }, done, { tgt: t });
+    else btAnim(u, 'Deep Note', () => btHit(u, t, 1.1), done, { tgt: t });
+  } else if (u.key === 'first_cantor') {
+    const t = pickAlly();
+    if (Math.random() < 0.4) btAnim(u, 'Bronze Vow', () => { btShield(u, 320, 2); u.buffs.dmgUp = 2; btText(u, 'Bronze Vow', '#d8c28a', 15); sfx('power'); }, done, { tgt: u, kind: 'cast' });
+    else btAnim(u, 'Cantor’s Rebuke', () => { btHit(u, t, 1.55, { tough: 20 }); }, done, { tgt: t, kind: 'melee' });
+  } else if (u.key === 'hollow_leviathan') {
+    if (!u.p2 && u.hp < u.maxHp * 0.5) { u.p2 = true; u.plan = ['hollow_wail', 'undertow', 'last_bar', 'tidal_slam']; u.pi = 0; BT.banner = { txt: 'The Missing Bar', sub: 'The Leviathan stops sleeping and starts listening', t: 2.2 }; sfx('phase'); }
+    const act = wardenPlanNext(u); u.pi++;
+    const t = pickAlly();
+    if (act === 'tidal_slam') btAnim(u, 'Tidal Slam', () => { btHit(u, t, 1.9); if (t && t.alive) btDelay(t, 0.2); BT.shake = 0.8; sfx('bossIn'); }, done, { tgt: t, kind: 'melee', dur: 1.2 });
+    else if (act === 'hollow_wail') btAnim(u, 'Hollow Wail', () => { for (const a of btAllies()) { btHit(u, a, 1.1); if (a.alive) a.buffs.weak = 2; } BT.shake = 0.8; sfx('ariaR'); }, done, { tgt: t, dur: 1.25 });
+    else if (act === 'undertow') btAnim(u, 'Undertow', () => { btShield(u, 500, 2); u.buffs.dmgUp = 2; btText(u, 'Hollow Shell', '#5ad8ff', 16); sfx('power'); }, done, { tgt: u, kind: 'cast' });
+    else btAnim(u, 'THE MISSING BAR', () => { for (const a of btAllies()) btHit(u, a, 2.0); BT.shake = 1.4; S.flash = 0.55; sfx('phase'); }, done, { tgt: t, kind: 'melee', dur: 1.5, at: 0.75 });
   } else wardenAct(u, done);
 }
 function wardenPlanNext(u) { let a = u.plan[u.pi % u.plan.length]; if (a === 'verdict' && !u.charging) a = 'gavel'; if (a === 'summon' && btFoes().length >= 3) a = 'gavel'; if (a === 'call_scribes' && btFoes().length >= 3) a = 'ink_lash'; return a; }
@@ -12201,6 +12362,14 @@ function wardenAct(u, done) {
   else btAnim(u, 'Tolling Verdict', () => { u.charging = false; for (const t of btAllies()) btHit(u, t, 1.8); BT.shake = 1; S.flash = 0.3; sfx('bossIn'); }, done, { dur: 1.0, at: 0.5 });
 }
 function wardenIntent(u) {
+  if (u.key === 'hollow_leviathan') {
+    return {
+      tidal_slam: 'Next: Tidal Slam, a heavy blow that delays one performer',
+      hollow_wail: 'Next: Hollow Wail, weakening the whole company',
+      undertow: 'Next: Undertow, raising a hollow shell and empowering its attacks',
+      last_bar: 'Next: THE MISSING BAR, striking the whole company'
+    }[wardenPlanNext(u)] || 'Next: The Leviathan listens';
+  }
   if (u.key === 'phantom_conductor') {
     return {
       baton_cut: 'Next: Baton Cut, a heavy blow that delays one performer',
@@ -13210,10 +13379,10 @@ const SIDE_BILL = [
 function showTales() { if (DLG || TR.active) return; taleView = 'pick'; renderStory(); sfx('ui'); }
 function renderTalePick() {
   const C = CAMP(), s = save.side.step || 0;
-  const pm = $('pickMain'), ch = chOf(C.step), ROM = ['I', 'II', 'III'];
+  const pm = $('pickMain'), ch = chOf(C.step), ROM = ['I', 'II', 'III', 'IV'];
   pm.querySelector('b').textContent = 'Chapter ' + ROM[ch - 1];
-  pm.querySelector('small').textContent = [`${CH_TITLES[0]}. The Tuning Forks have started to sing, and the company goes looking.`, `${CH_TITLES[1]}. A second fork is ringing in the Drowned Library, and the Library is cataloguing everyone.`, `${CH_TITLES[2]}. A third fork rings in the Coral Opera, where a conductor has not lowered his baton in a hundred years.`][ch - 1];
-  $('pickMainEm').textContent = C.step >= 18 ? 'Chapter III is complete' : (C.step === 6 || C.step === 12) ? `Chapter ${ROM[ch - 2]} complete · Chapter ${ROM[ch - 1]} awaits` : C.step === 0 ? 'Not yet begun' : MAIN_BEATS[C.step].name;
+  pm.querySelector('small').textContent = [`${CH_TITLES[0]}. The Tuning Forks have started to sing, and the company goes looking.`, `${CH_TITLES[1]}. A second fork is ringing in the Drowned Library, and the Library is cataloguing everyone.`, `${CH_TITLES[2]}. A third fork rings in the Coral Opera, where a conductor has not lowered his baton in a hundred years.`, `${CH_TITLES[3]}. The last fork rings from the Abyssal Cathedral, over something that has listened for five hundred years.`][ch - 1];
+  $('pickMainEm').textContent = C.step >= 24 ? 'The main story is complete' : (C.step === 6 || C.step === 12 || C.step === 18) ? `Chapter ${ROM[ch - 2]} complete · Chapter ${ROM[ch - 1]} awaits` : C.step === 0 ? 'Not yet begun' : MAIN_BEATS[C.step].name;
   const chName = s >= 64 ? 'Chapter X [Part 2 Grand Climax]' : s >= 57 ? 'Chapter IX' : s >= 50 ? 'Chapter VIII' : s >= 43 ? 'Chapter VII' : s >= 36 ? 'Chapter VI' : s >= 29 ? 'Chapter V [Part 1 Climax]' : s >= 22 ? 'Chapter IV' : s >= 15 ? 'Chapter III' : s >= 8 ? 'Chapter II' : 'Chapter I';
   $('pickSideEm').textContent = s >= SIDE_BEATS.length ? 'Part 2 Complete (All 10 Chapters told)' : s === 0 ? 'Not yet begun' : `${chName} · ${SIDE_BEATS[Math.min(s, SIDE_BEATS.length - 1)]}`;
 }
@@ -13313,14 +13482,14 @@ function renderStory() {
   renderTalePick();
   if (taleView === 'side') { renderSideStory(); return; }
   if (taleView !== 'main') return;
-  const C = CAMP(), st = STORY_STEPS[C.step], sN = C.step, done = sN >= 18, i0 = Math.min(sN, 17), ch = chOf(Math.min(sN, 17)), ROM = ['I', 'II', 'III'];
-  $('stChap').textContent = done ? 'Main story · Chapter III · complete' : `Main story · Chapter ${ROM[ch - 1]} · ${MAIN_BEATS[i0].name}`;
-  $('stRail').innerHTML = MAIN_BEATS.map((B, n) => `<i class="${sN > n ? 'got' : sN === n ? 'on' : ''} ${n <= sN ? 'live' : ''}" data-main="${n}" title="${'Chapter ' + ROM[chOf(n) - 1]} · Scene ${n + 1}: ${B.name}" style="${n <= sN ? 'cursor:pointer;' : ''}${n === 6 || n === 12 ? 'margin-left:4px;border-left:1px solid rgba(233,201,138,.5);padding-left:1px;' : ''}"></i>`).join('');
+  const C = CAMP(), st = STORY_STEPS[C.step], sN = C.step, done = sN >= 24, i0 = Math.min(sN, 23), ch = chOf(Math.min(sN, 23)), ROM = ['I', 'II', 'III', 'IV'];
+  $('stChap').textContent = done ? 'Main story · Chapter IV · complete' : `Main story · Chapter ${ROM[ch - 1]} · ${MAIN_BEATS[i0].name}`;
+  $('stRail').innerHTML = MAIN_BEATS.map((B, n) => `<i class="${sN > n ? 'got' : sN === n ? 'on' : ''} ${n <= sN ? 'live' : ''}" data-main="${n}" title="${'Chapter ' + ROM[chOf(n) - 1]} · Scene ${n + 1}: ${B.name}" style="${n <= sN ? 'cursor:pointer;' : ''}${n === 6 || n === 12 || n === 18 ? 'margin-left:4px;border-left:1px solid rgba(233,201,138,.5);padding-left:1px;' : ''}"></i>`).join('');
   $('stRail').querySelectorAll('[data-main]').forEach(el => el.onclick = () => { const n = +el.dataset.main; if (TR.active || DLG || n > CAMP().step) return; playMainBeat(n, true); });
-  $('stMain').querySelector('.title').innerHTML = ['The Voice Beneath<br>the Aqueduct', 'The Ink That<br>Does Not Dry', 'The Held<br>Note'][ch - 1];
-  $('stSyn').textContent = ['The Tuning Forks have started to sing, and the singers beside them are gone. Lady Ondine goes down into the Grand Aqueduct to find out who is staging this performance.', 'A second fork is ringing in the Drowned Library, and ink is rising in the gutters of Highwater. Isolde hears her sister holding on, and the Library is cataloguing everyone.', 'The harbour has gone warm and the gutters are blooming. A third fork rings in the Coral Opera, where the Phantom Conductor has held one note for a hundred years, and Pell must face the master he ran from.'][ch - 1];
-  $('stObj').textContent = done ? 'Chapter III is complete. Three forks are silent. Only the Abyssal Cathedral still rings, and what sleeps beneath it is listening.' : (st ? st.obj : '');
-  $('stGo').textContent = (sN === 0 || sN === 6 || sN === 12) ? `Begin Chapter ${ROM[ch - 1]}` : done ? 'Chapter IV is not yet written' : 'Continue: ' + MAIN_BEATS[sN].name;
+  $('stMain').querySelector('.title').innerHTML = ['The Voice Beneath<br>the Aqueduct', 'The Ink That<br>Does Not Dry', 'The Held<br>Note', 'The Hollow<br>Below'][ch - 1];
+  $('stSyn').textContent = ['The Tuning Forks have started to sing, and the singers beside them are gone. Lady Ondine goes down into the Grand Aqueduct to find out who is staging this performance.', 'A second fork is ringing in the Drowned Library, and ink is rising in the gutters of Highwater. Isolde hears her sister holding on, and the Library is cataloguing everyone.', 'The harbour has gone warm and the gutters are blooming. A third fork rings in the Coral Opera, where the Phantom Conductor has held one note for a hundred years, and Pell must face the master he ran from.', 'Three voices are free. The last fork rings from the Abyssal Cathedral, under the Tide Opera itself, over something that has listened for five hundred years and was never sung the last bar.'][ch - 1];
+  $('stObj').textContent = done ? 'The main story is complete. All four forks stand open, and the Hollow Leviathan sleeps because it chose to. The Understudies’ tale continues in the side story.' : (st ? st.obj : '');
+  $('stGo').textContent = (sN === 0 || sN === 6 || sN === 12 || sN === 18) ? `Begin Chapter ${ROM[ch - 1]}` : done ? 'The main story is complete' : 'Continue: ' + MAIN_BEATS[sN].name;
   $('stGo').disabled = done;
   $('stHint').textContent = 'Told on this stage in full visual novel presentation. Each chapter integrates tactical turn-based combat encounters. Click a lit scene on the rail above to replay it.';
   const forks = Object.keys(save.isle.forks || {}).filter(k => k !== 'hub').length, pages = Object.keys(save.isle.pages || {}).length, bosses = Object.keys(save.isle.bosses || {}).filter(k => save.isle.bosses[k]).length;
@@ -13328,6 +13497,7 @@ function renderStory() {
   $('stTrial').style.display = C.step >= 6 ? '' : 'none';
   $('stTrial2').style.display = C.step >= 12 ? '' : 'none';
   $('stTrial3').style.display = C.step >= 18 ? '' : 'none';
+  $('stTrial4').style.display = C.step >= 24 ? '' : 'none';
   $('stCast').innerHTML = C.party.map(id => {
     const H = HEROES[id], lv = C.chars[id] ? C.chars[id].lvl : 1;
     return `<button class="coCard" data-who="${id}"><b class="g" style="color:${AFF[H.aff].col}">${AFF[H.aff].g}</b><span>${H.short}<small>${H.role.split('·')[0]}</small></span><b>Lv ${lv}</b></button>`;
@@ -13353,12 +13523,13 @@ function playMainBeat(n, replay) {
 }
 $('stGo').onclick = () => {
   const C = CAMP(); if (DLG || TR.active) return;
-  if (C.step < 18) playMainBeat(C.step, false);
+  if (C.step < 24) playMainBeat(C.step, false);
 };
 $('stExplore').onclick = () => {
   if (DLG || TR.active) return;
   taleView = 'main'; startIsle(); go('travel', { from: -1, to: 0, cycle: 1, dur: 2.8, then: 'isle', title: 'The Drowned Isles', sub: 'An expedition beyond the stage' });
 };
+$('stTrial4').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial4', win: () => go('story'), retreat: () => go('story') }); };
 $('stTrial3').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial3', win: () => go('story'), retreat: () => go('story') }); };
 $('stTrial2').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial2', win: () => go('story'), retreat: () => go('story') }); };
 $('stParty').onclick = () => { if (!DLG && !TR.active) go('party'); };
@@ -13402,6 +13573,12 @@ const MAIN_BEATS = [
   { name: 'The front rows', scenes: ['c3_reef'], battle: 'c3b2', win: 'c3_reef_win' },
   { name: 'A rest, written', scenes: ['c3_interlude'] },
   { name: 'The Conductor', scenes: ['c3_boss_pre'], battle: 'c3b3', win: 'c3_boss_win' },
+  { name: 'The trapdoor', scenes: ['c4_prologue'] },
+  { name: 'The last fork', scenes: ['c4_fork'], battle: 'c4b1', win: 'c4_fork_win' },
+  { name: 'The nave', scenes: ['c4_nave'] },
+  { name: 'The crypt', scenes: ['c4_crypt'], battle: 'c4b2', win: 'c4_crypt_win' },
+  { name: 'Four voices', scenes: ['c4_interlude'] },
+  { name: 'The Leviathan', scenes: ['c4_boss_pre'], battle: 'c4b3', win: 'c4_boss_win' },
 ];
 const MAINVN = {
   prologue: { bg: 'm_backstage', cast: ['ondine', 'coralie'], music: 'intermission', beat: 0 },
@@ -13431,6 +13608,15 @@ const MAINVN = {
   c3_interlude: { bg: 'm_backstage', cast: ['isolde', 'pell', 'ondine'], music: 'intermission', beat: 16 },
   c3_boss_pre: { bg: 'm_podium', cast: ['ondine', 'pell', 'tobias'], music: 'boss', beat: 17 },
   c3_boss_win: { bg: 'm_podium', cast: ['pell', 'ondine', 'isolde'], music: 'results', beat: 17 },
+  c4_prologue: { bg: 'm_backstage', cast: ['coralie', 'ondine', 'tobias'], music: 'intermission', beat: 18 },
+  c4_fork: { bg: 'm_cathedral', cast: ['ondine', 'isolde', 'mirelle'], music: 'cathedral', beat: 19 },
+  c4_fork_win: { bg: 'm_cathedral', cast: ['ondine', 'isolde', 'tobias'], music: 'cathedral', beat: 19 },
+  c4_nave: { bg: 'm_cathedral', cast: ['ondine', 'pell', 'mirelle'], music: 'libretto', beat: 20 },
+  c4_crypt: { bg: 'm_cathedral', cast: ['ondine', 'isolde', 'mirelle'], music: 'cathedral', beat: 21 },
+  c4_crypt_win: { bg: 'm_cathedral', cast: ['mirelle', 'ondine', 'tobias'], music: 'gallery', beat: 21 },
+  c4_interlude: { bg: 'm_cathedral', cast: ['isolde', 'ondine', 'pell'], music: 'recital', beat: 22 },
+  c4_boss_pre: { bg: 'm_abyss', cast: ['ondine', 'pell', 'isolde'], music: 'boss', beat: 23 },
+  c4_boss_win: { bg: 'm_abyss', cast: ['ondine', 'isolde', 'pell'], music: 'results', beat: 23 },
 };
 function drawMainVNBg(c, key, t) {
   const w = W, h = H, hz = h * 0.62, rn = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -13441,6 +13627,8 @@ function drawMainVNBg(c, key, t) {
     m_hall: { top: '#0a0618', bot: '#2a1a56', lamp: '154,124,255', floor: '#1a1236', arches: 1, bell: 1 },
     m_library: { top: '#0e0818', bot: '#33244e', lamp: '255,196,130', floor: '#2c1f3e', shelves: 1, pages: 1 },
     m_archive: { top: '#05030c', bot: '#1a1030', lamp: '212,154,255', floor: '#0e0818', shelves: 1, pages: 1, ink: 1 },
+    m_cathedral: { top: '#01070a', bot: '#0e3036', lamp: '90,255,210', floor: '#082727', arches: 1, water: 1, ribs: 1 },
+    m_abyss: { top: '#000306', bot: '#062227', lamp: '90,255,210', floor: '#03110f', water: 1, hollow: 1 },
     m_coral: { top: '#1c0614', bot: '#561a3e', lamp: '255,150,170', floor: '#561c36', seats: 1, coral: 1, water: 1 },
     m_podium: { top: '#12040e', bot: '#3c1030', lamp: '255,208,112', floor: '#2a0c20', seats: 1, coral: 1, podium: 1 },
   }[key] || { top: '#0a0a14', bot: '#1c1c30', lamp: '233,201,138', floor: '#141420' };
@@ -13453,6 +13641,8 @@ function drawMainVNBg(c, key, t) {
   if (P.seats) for (let r = 0; r < 5; r++) for (let i = 0; i < 26; i++) { const x = (i + .5 + (r % 2) * .5) * w / 26, y = hz - h * (.04 + r * .05), a = .5 + .5 * Math.sin(t * 2 + i * .7 + r); c.fillStyle = `rgba(${34 + r * 8},8,${28 + r * 6},.85)`; c.beginPath(); c.arc(x, y, w * .014, 0, TAU); c.fill(); c.fillStyle = `rgba(${P.lamp},${.12 + .15 * a})`; c.beginPath(); c.arc(x, y - w * .004, w * .005, 0, TAU); c.fill(); }
   if (P.coral) for (let i = 0; i < 9; i++) { const x = w * (i + .5) / 9 + (rn(i) - .5) * 30, bh = h * (.12 + rn(i + 3) * .16); c.strokeStyle = `rgba(${P.lamp},.45)`; c.lineWidth = 4; for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * .35 + Math.sin(t * .8 + i + k) * .08; c.beginPath(); c.moveTo(x, hz + 4); c.quadraticCurveTo(x + Math.cos(a) * bh * .5, hz - bh * .5, x + Math.cos(a) * bh, hz + Math.sin(a) * bh); c.stroke(); } }
   if (P.podium) { const px = w * .5; c.fillStyle = 'rgba(30,8,26,.95)'; c.beginPath(); c.moveTo(px - w * .16, hz + h * .02); c.lineTo(px - w * .1, hz - h * .1); c.lineTo(px + w * .1, hz - h * .1); c.lineTo(px + w * .16, hz + h * .02); c.closePath(); c.fill(); const bg2 = c.createRadialGradient(px, hz - h * .3, 4, px, hz - h * .3, h * .35); bg2.addColorStop(0, `rgba(${P.lamp},${.35 + .1 * Math.sin(t * 3)})`); bg2.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = bg2; c.fillRect(px - h * .4, hz - h * .7, h * .8, h * .7); c.strokeStyle = `rgba(${P.lamp},.9)`; c.lineWidth = 3; c.beginPath(); c.moveTo(px, hz - h * .1); c.lineTo(px + h * .02, hz - h * .5); c.stroke(); }
+  if (P.ribs) for (let i = 0; i < 7; i++) { const x = w * (i + .5) / 7; c.strokeStyle = `rgba(${P.lamp},.22)`; c.lineWidth = 3; c.beginPath(); c.moveTo(x, hz); c.quadraticCurveTo(w / 2, -h * .2, w - x, hz); c.stroke(); }
+  if (P.hollow) { const cx = w * .5, cy = hz - h * .12, pu = .5 + .5 * Math.sin(t * 1.1); const og = c.createRadialGradient(cx, cy, 10, cx, cy, h * .5); og.addColorStop(0, 'rgba(0,0,0,.95)'); og.addColorStop(.6, `rgba(${P.lamp},${.08 + .06 * pu})`); og.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = og; c.fillRect(0, 0, w, h); c.strokeStyle = `rgba(${P.lamp},${.35 + .25 * pu})`; c.lineWidth = 4; for (let k = 1; k < 5; k++) { c.beginPath(); c.ellipse(cx, cy, h * (.08 + k * .09 + pu * .02), h * (.05 + k * .06 + pu * .015), 0, 0, TAU); c.stroke(); } }
   if (P.bell) { const bx = w * .5, by = h * .12, bh = h * .34; c.fillStyle = 'rgba(8,4,20,.9)'; c.beginPath(); c.moveTo(bx - bh * .2, by + bh * .1); c.quadraticCurveTo(bx - bh * .2, by - bh * .05, bx, by - bh * .1); c.quadraticCurveTo(bx + bh * .2, by - bh * .05, bx + bh * .2, by + bh * .1); c.lineTo(bx + bh * .38, by + bh * .7); c.quadraticCurveTo(bx, by + bh * .78, bx - bh * .38, by + bh * .7); c.closePath(); c.fill(); c.strokeStyle = `rgba(${P.lamp},${.4 + .2 * Math.sin(t * 2)})`; c.lineWidth = 3; c.stroke(); }
   if (P.fork) { const fx = w * .5, fy = hz, fh = h * .34, pu = .5 + .5 * Math.sin(t * 2.4); c.strokeStyle = `rgba(196,150,70,.95)`; c.lineWidth = Math.max(6, w * .012); c.lineCap = 'round'; c.beginPath(); c.moveTo(fx - fh * .12, fy - fh); c.lineTo(fx - fh * .12, fy - fh * .3); c.quadraticCurveTo(fx, fy - fh * .12, fx + fh * .12, fy - fh * .3); c.lineTo(fx + fh * .12, fy - fh); c.moveTo(fx, fy - fh * .14); c.lineTo(fx, fy); c.stroke(); const gl = c.createRadialGradient(fx, fy - fh * .65, 4, fx, fy - fh * .65, fh * .8); gl.addColorStop(0, `rgba(${P.lamp},${.22 + .2 * pu})`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(fx - fh, fy - fh * 1.5, fh * 2, fh * 1.6); c.strokeStyle = `rgba(${P.lamp},${.4 * (1 - pu)})`; c.lineWidth = 2; for (let k = 1; k < 4; k++) { c.beginPath(); c.arc(fx, fy - fh * .65, fh * (.2 + k * .22 + pu * .08), 0, TAU); c.stroke(); } }
   if (P.water) { for (let i = 0; i < 18; i++) { const yy = hz + 6 + i * (h - hz) / 18, wob = Math.sin(t * 1.3 + i * 1.7) * 12; c.strokeStyle = `rgba(${P.lamp},${.06 + .05 * Math.sin(t + i)})`; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, yy); for (let x = 0; x <= w; x += 40) c.lineTo(x, yy + Math.sin(x * .012 + t * 1.5 + i) * 2.5 + wob * .1); c.stroke(); } }
@@ -16014,7 +16204,7 @@ function startVN(opts = {}) {
   const beatTitle = SIDE_BEATS[num] || 'THE UNDERSTUDIES';
   const epNum = String(num + 1).padStart(2, '0');
   { const vc = document.querySelector('.vn-chapter'); if (vc) vc.textContent = MV ? 'TIDEBOUND CORRIDOR' : 'TIDEBOUND: THE UNDERSTUDIES'; }
-  $('vnTitle').textContent = MV ? `THE MAIN STORY // CH. ${['I', 'II', 'III'][chOf(num) - 1]} // ${MAIN_BEATS[num].name.toUpperCase()}` : `EPISODE ${epNum} // ${chRoman} // ${beatTitle.toUpperCase()}`;
+  $('vnTitle').textContent = MV ? `THE MAIN STORY // CH. ${['I', 'II', 'III', 'IV'][chOf(num) - 1]} // ${MAIN_BEATS[num].name.toUpperCase()}` : `EPISODE ${epNum} // ${chRoman} // ${beatTitle.toUpperCase()}`;
 
   $('sc-vn').classList.remove('ui-hidden');
   $('vnAuto').classList.remove('active');
@@ -16108,6 +16298,9 @@ function vnShowLine(L) {
     isolde: '// FIRST SOPRANO · THE AQUEDUCT FORK',
     verrine: '// CONTRALTO · THE LIBRARY FORK',
     oriel: '// MEZZO · THE CORAL OPERA FORK',
+    cielle: '// HIGHEST VOICE · THE CATHEDRAL FORK',
+    leviathan: '// THE FIRST LISTENER · THE HOLLOW DEEP',
+    founder: '// FIRST CHORAL DYNASTY',
     phantom: '// MAESTRO · THE PHANTOM CONDUCTOR',
     warden: '// THE ABYSSAL WARDEN',
     kraken: '// ARCHIVIST · THE KRAKEN MATRIARCH',
@@ -16767,6 +16960,10 @@ const ENCLOOT = {
   b3: { scores: 10, keeps: 2, minRar: 4, inst: 'silentbell' },
   trial: { scores: 4, keeps: 2, minRar: 4 },
   trial2: { scores: 5, keeps: 2, minRar: 4 },
+  trial4: { scores: 7, keeps: 2, minRar: 4 },
+  c4b1: { scores: 7, keeps: 1 },
+  c4b2: { scores: 8, keeps: 2 },
+  c4b3: { scores: 16, keeps: 3, minRar: 4, inst: 'gildedfan' },
   trial3: { scores: 6, keeps: 2, minRar: 4 },
   c3b1: { scores: 6, keeps: 1 },
   c3b2: { scores: 7, keeps: 2 },
@@ -16815,6 +17012,18 @@ const STORY_LOG = [
   'Mirelle found her own catalogue card, and tore it up.',
   'Isolde remembered the lowest note, the key to the Archive of Ink.',
   'The Drowned Kraken Matriarch fell and Verrine, the second voice, was freed. Two forks are silent; two still ring.',
+  'The harbour went warm and the gutters bloomed. Pell heard his old master’s held note in the walls, and the company set out for the Coral Opera.',
+  'The anemone audience rose, and Oriel, the third voice, begged for the interval. The Conductor holds the note to keep the cage open.',
+  'The reef’s currents turned out to be the Conductor’s strings. A lost page said a rest would break his tempo.',
+  'Pell counted along with his master for three beats, and then stopped. The fourth beat was his own.',
+  'Verrine and Isolde taught a cadence for two voices, and Pell wrote a rest the whole orchestra could take together.',
+  'The Phantom Conductor lowered his baton after a hundred years. Oriel was freed. Three forks are silent; one still rings.',
+  'Coralie opened the trapdoor under the Tide Opera’s own stage. It leads down to the Abyssal Cathedral.',
+  'In the Cathedral, the last voice, Cielle, said the sleeper is not a monster. It is a listener who was never finished for.',
+  'A mural of the lullaby showed it was never given its last bar.',
+  'The ghosts of the First Choral Dynasty tried to keep the cage shut, and the company refused.',
+  'Four voices and one soloist sang the chord together at the Cathedral door.',
+  'The Hollow Leviathan was sung its last bar and slept willingly. All four forks stand open.',
 ];
 let OWM = null;
 function setExplorer(id) {
