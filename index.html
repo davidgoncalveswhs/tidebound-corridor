@@ -8144,6 +8144,17 @@ function beachBody(c, s, sk, t, front, pick) {
   c.strokeStyle = sk.trim; c.lineWidth = s * 0.01; c.beginPath(); c.moveTo(-0.2 * s, -1.16 * s); c.quadraticCurveTo(0, -1.13 * s, 0.2 * s, -1.16 * s); c.stroke();
   c.strokeStyle = shade(top, -0.1); c.lineWidth = s * 0.02;
   for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * 0.12 * s, -1.32 * s); c.quadraticCurveTo(sd * 0.08 * s, -1.4 * s, sd * 0.04 * s, -1.47 * s); c.stroke(); }
+  if (sk.bikini) {
+    // bare midriff and hips, a bikini bottom with side ties and a pale trim
+    g = c.createLinearGradient(-0.2 * s, 0, 0.2 * s, 0); g.addColorStop(0, shade(skin, -0.18)); g.addColorStop(0.5, shade(skin, 0.08)); g.addColorStop(1, shade(skin, -0.16));
+    c.fillStyle = g; c.beginPath(); c.moveTo(-0.17 * s, -1.16 * s); c.lineTo(0.17 * s, -1.16 * s); c.quadraticCurveTo(0.215 * s, -0.98 * s, 0.185 * s, -0.8 * s); c.lineTo(-0.185 * s, -0.8 * s); c.quadraticCurveTo(-0.215 * s, -0.98 * s, -0.17 * s, -1.16 * s); c.closePath(); c.fill();
+    const bot = sk.torso; g = c.createLinearGradient(-0.2 * s, 0, 0.2 * s, 0); g.addColorStop(0, shade(bot, -0.3)); g.addColorStop(0.5, shade(bot, 0.1)); g.addColorStop(1, shade(bot, -0.3));
+    c.fillStyle = g; c.beginPath(); c.moveTo(-0.2 * s, -0.99 * s); c.lineTo(0.2 * s, -0.99 * s); c.quadraticCurveTo(0.12 * s, -0.9 * s, 0.035 * s, -0.79 * s); c.lineTo(-0.035 * s, -0.79 * s); c.quadraticCurveTo(-0.12 * s, -0.9 * s, -0.2 * s, -0.99 * s); c.closePath(); c.fill();
+    c.strokeStyle = sk.trim; c.lineWidth = s * 0.009; c.beginPath(); c.moveTo(-0.2 * s, -0.99 * s); c.lineTo(0.2 * s, -0.99 * s); c.stroke();
+    c.strokeStyle = shade(bot, -0.1); c.lineWidth = s * 0.012;
+    for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * 0.2 * s, -0.99 * s); c.quadraticCurveTo(sd * 0.25 * s + Math.sin(t * 3 + sd) * s * 0.006, -0.96 * s, sd * 0.26 * s, -0.9 * s); c.stroke(); }
+    return;
+  }
   // the shirt: open down the front and knotted at the waist in front, plain across the back
   const sh = `rgba(${rgbStr(shirt)},.94)`, hem = -1.1;
   c.fillStyle = sh;
@@ -19132,9 +19143,9 @@ document.addEventListener('click', e => {
 
 
 // ================= Lady Ondine’s swimsuit: only from the box office, and the 3D war uses her swimsuit model when it is equipped =================
-SKINS.push({ id: 'tidepoolswim', name: 'Tidepool Bloom', cost: 0, summer: true, unlock: 'Only from the Tidepool Summer programme in the box office.', desc: 'Summer wear: a magenta one-piece with gold fastenings, a silver-lilac mane and a great pink bow. Worn by Lady Ondine in the 3D war.', coat: '#d4245e', torso: '#f06090', trim: '#ffd070', hair: '#c8c8e8', streak: '#ff90b0', hat: '#e8e0f0', band: '#ff5a90', bolt: '#ffc0d8', aura: '255,120,170' });
+SKINS.push({ id: 'tidepoolswim', name: 'Tidepool Bloom', cost: 0, summer: 'beach', bikini: true, unlock: 'Only from the Tidepool Summer programme in the box office.', desc: 'Summer wear: a steel-blue halter two-piece with pale trim, copper hair and a white flower tucked above one ear. Worn by Lady Ondine in the 3D war.', coat: '#3d6f9d', torso: '#6a9acb', trim: '#e4ecf6', hair: '#b4623a', streak: '#e09a60', hat: '#2c5478', band: '#9ac4ee', bolt: '#cfe6ff', aura: '120,180,235', sleeve: '#f3d3c0' });
 SKIN5.tidepoolswim = 1;
-BANNERS.tidepool = { name: 'Tidepool Summer', ey: 'Costume programme', blurb: 'Lady Ondine’s summer swimsuit, Tidepool Bloom, is featured. Opening night is always the swimsuit. Equip it from the Dressing Room or the Characters page once it is yours, and she wears it in the Drowned Front.', face: 'tidepoolswim', up5: 'tidepoolswim', pool5: [], up4: null, pool4: ['midnight', 'sakura', 'seaside', 'lagoon'] };
+BANNERS.tidepool = { name: 'Tidepool Summer', ey: 'Costume programme', blurb: 'Lady Ondine’s summer two-piece, Tidepool Bloom, is featured. Opening night is always the swimsuit. Equip it from the Dressing Room or the Characters page once it is yours, and she wears it in the Drowned Front.', face: 'tidepoolswim', up5: 'tidepoolswim', pool5: [], up4: null, pool4: ['midnight', 'sakura', 'seaside', 'lagoon'] };
 // ================= The Drowned Front: the 3D war pays out into the main game =================
 SKINS.push(
   { id: 'frontline', name: 'Front-Line Prima', cost: 0, unlock: 'Earned by defeating 200 of the drowned in the Drowned Front.', desc: 'A rain-darkened tailcoat of the company’s war years, with ember-gold braid.', coat: '#3a1a2a', torso: '#7a2a3c', trim: '#ffd070', hair: '#fff0e0', streak: '#ff7a5a', hat: '#1a0a10', band: '#ffb050', bolt: '#ffd9a0', aura: '255,170,90' },
