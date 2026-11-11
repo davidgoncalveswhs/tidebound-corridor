@@ -322,7 +322,7 @@ const CAST={
  mirelle:{name:'Mirelle',short:'Mirelle',role:'Drowned Chorister · medic',col:'#c79aff',hp:105,speed:1.02,
    w:{name:'Low Hymn PDW',mag:24,res:144,rate:15,dmg:10.5,auto:true,spread:.01,body:0x2c3f3d,acc:0xc79aff,len:.72,head:1.8,reload:1.5,scope:'reflex',zmin:1.3,zmax:2,z0:1.5,overlay:false},q:{name:'Tidal Psalm',cd:16,desc:'Heals the whole company'},x:{name:'Drowned Grace',desc:'Raises the fallen and heals everyone'}}
 };
-const squad=['ondine','caliste','tobias','mirelle'].map(id=>({id,def:CAST[id],hp:CAST[id].hp,max:CAST[id].hp,mag:CAST[id].w.mag,res:CAST[id].w.res,ult:id==='ondine'?35:0,qcd:0,down:false,zoom:CAST[id].w.z0,avail:id==='ondine'||id==='caliste'}));
+const squad=['ondine','caliste','tobias','mirelle'].map(id=>({id,def:CAST[id],hp:CAST[id].hp,max:CAST[id].hp,mag:CAST[id].w.mag,res:CAST[id].w.res*2,ult:id==='ondine'?35:0,qcd:0,down:false,zoom:CAST[id].w.z0,avail:id==='ondine'||id==='caliste'}));
 const P={hook:{on:false,a:new THREE.Vector3(),len:0,cd:0},glide:0,hookable:false,ads:0,rp:0,relDur:1,pos:new THREE.Vector3(0,0,54),vel:new THREE.Vector3(),yaw:0,pitch:0,cur:0,ground:true,reload:0,cd:0,bob:0,kick:0,hurtT:0,lastHurt:-99,step:0,dead:false,swap:0,edge:false};
 const H=()=>squad[P.cur],W=()=>H().def.w;
 for(const k of['hp','mag','res'])Object.defineProperty(P,k,{get(){return H()[k]},set(v){H()[k]=v}});
@@ -377,17 +377,17 @@ const TEXL=new THREE.TextureLoader();
 const SPR={usher:{f:'enemy-usher.png',h:2.0},hound:{f:'enemy-hound.png',h:1.5},voice:{f:'enemy-voice.png',h:2.8,float:.3},reaver:{f:'enemy-reaver.png',h:2.75},
   warden:{f:'sprite-warden.png',h:7.4},kraken:{f:'sprite-kraken.png',h:8.8},conductor:{f:'sprite-conductor.png',h:5.8},leviathan:{f:'sprite-leviathan.png',h:10.5},impresario:{f:'sprite-impresario.png',h:6.2}};
 await Promise.all(Object.values(SPR).map(s=>new Promise(r=>TEXL.load('../assets/art/'+s.f,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;s.tex=t;s.asp=t.image.width/t.image.height;s.depth=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:t,alphaTest:.4});r();},undefined,()=>{s.asp=.6;r();}))));
-const ES={usher:{hp:80,spd:2.7,dmg:9,r:.45,hh:2.0,cd:1.3,name:'Drowned Usher'},hound:{hp:55,spd:5.6,dmg:7,r:.45,hh:1.5,cd:.9,name:'Bilge Hound'},voice:{hp:65,spd:2.2,dmg:11,r:.45,hh:2.8,cd:2.4,name:'Pit Voice'},reaver:{hp:420,spd:1.9,dmg:28,r:.65,hh:2.75,cd:1.7,name:'House Reaver'}};
+const ES={usher:{hp:140,spd:2.7,dmg:12,r:.45,hh:2.0,cd:1.3,name:'Drowned Usher'},hound:{hp:100,spd:5.6,dmg:10,r:.45,hh:1.5,cd:.9,name:'Bilge Hound'},voice:{hp:110,spd:2.2,dmg:15,r:.45,hh:2.8,cd:2.4,name:'Pit Voice'},reaver:{hp:700,spd:1.9,dmg:36,r:.65,hh:2.75,cd:1.7,name:'House Reaver'}};
 const BOSSF={
- warden:{name:'The Abyssal Warden',sub:'Its bell is raised before it falls',hp:3800,spd:1.6,col:'#9a7cff',x:0,z:-352,keep:14,pat:['volley','slam','aimed','slam','volley','summon'],story:1,
+ warden:{name:'The Abyssal Warden',sub:'Its bell is raised before it falls',hp:17000,spd:1.6,col:'#9a7cff',x:0,z:-352,keep:14,pat:['volley','slam','aimed','slam','volley','aimed'],story:1,
    intro:['The Abyssal Warden','The bell is raised. And the bell must fall.','#5affd8'],down:['Isolde','You came for me. Thank you… the song is quiet at last.','#e2d0ff']},
- kraken:{name:'The Drowned Kraken Matriarch',sub:'Ink on every page of the Aqueduct',hp:3200,spd:1.1,col:'#c07aff',x:-72,z:-124,keep:16,pat:['lanes','aimed','summon','volley'],
+ kraken:{name:'The Drowned Kraken Matriarch',sub:'Ink on every page of the Aqueduct',hp:16000,spd:1.1,col:'#c07aff',x:-72,z:-124,keep:16,pat:['lanes','aimed','summon','volley'],
    intro:['The Kraken Matriarch','Every page you read was written in my ink.','#c07aff'],down:['Mirelle','The water is quiet. It is only water again.','#c79aff']},
- conductor:{name:'The Phantom Conductor',sub:'He has not lowered the baton in a hundred years',hp:3000,spd:2.4,col:'#ff5a70',x:56,z:-246,keep:14,pat:['shields','teleport','volley','wall','aimed'],
+ conductor:{name:'The Phantom Conductor',sub:'He has not lowered the baton in a hundred years',hp:15000,spd:2.4,col:'#ff5a70',x:56,z:-246,keep:14,pat:['shields','teleport','volley','wall','aimed'],
    intro:['The Phantom Conductor','Again. From the top. And this time, in tune.','#ff5a70'],down:['Pell Ashgrove','Master… you can finally rest your arm.','#ffd0a0']},
- leviathan:{name:'The Hollow Leviathan',sub:'It rises beneath Brinegate Shallows',hp:4200,spd:2.2,col:'#5ad8ff',x:44,z:-54,keep:12,pat:['charge','wall','lanes','aimed'],
+ leviathan:{name:'The Hollow Leviathan',sub:'It rises beneath Brinegate Shallows',hp:17000,spd:2.2,col:'#5ad8ff',x:44,z:-54,keep:12,pat:['charge','wall','lanes','aimed'],
    intro:['The Hollow Leviathan','…','#5ad8ff'],down:['Madame Coralie','The shallows sing again. Thank you, my dears.','#e9c98a']},
- impresario:{name:'The Crimson Impresario',sub:'Master of the Last House',hp:3600,spd:1.8,col:'#ffd070',x:-34,z:-268,keep:15,pat:['shields','teleport','volley','wall','aimed'],
+ impresario:{name:'The Crimson Impresario',sub:'Master of the Last House',hp:11000,spd:1.8,col:'#ffd070',x:-34,z:-268,keep:15,pat:['shields','teleport','volley','wall','aimed'],
    intro:['The Crimson Impresario','The house is full tonight. Every seat is yours.','#ffd070'],down:['Lady Ondine','The final curtain. And it is ours to lower.','#5ad8ff']}};
 for(const [id,B] of Object.entries(BOSSF)){const h=SPR[id].h;ES[id]={hp:B.hp,spd:B.spd,dmg:0,r:Math.max(1.1,h*.1),hh:h,cd:2,name:B.name,boss:1};}
 const enemies=[],stdM=(c,o={})=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:.7,metalness:.1,envMapIntensity:.6},o));
@@ -482,7 +482,7 @@ const chargeM=new THREE.Mesh(new THREE.PlaneGeometry(2.6,40),new THREE.MeshBasic
 const hexN=h=>parseInt(h.slice(1),16);
 function bossIntro(e){const B=e.B;msg(B.name.toUpperCase(),3400);say(B.intro[0],B.intro[1],B.intro[2],5400);sfx.bell();shake=.5;}
 function bossDown(e){const B=e.B;slamMark.material.opacity=0;slamFill.material.opacity=0;laneM.forEach(m=>m.visible=false);chargeM.visible=false;burst(e.g.position.clone().setY(e.D.hh*.5),hexN(B.col),220,16,2.2,2);whiteFlash(.7);shake=1;sfx.ult();
-  if(!RUN.bosses.includes(B.reward||e.type))RUN.bosses.push(e.type);writeDispatch();say(B.down[0],B.down[1],B.down[2],5200);
+  if(!RUN.bosses.includes(B.reward||e.type))RUN.bosses.push(e.type);writeDispatch();for(let i=0;i<4;i++){const a=i/4*TAU;pickup(i%2?'med':'ammo',e.g.position.x+Math.cos(a)*5,e.g.position.z+Math.sin(a)*5);}say(B.down[0],B.down[1],B.down[2],5200);
   const left=Object.keys(BOSSF).filter(id=>!enemies.find(x=>x.type===id).dead);if(!left.length){RUN.clear=true;writeDispatch();setTimeout(win,3600);}else msg(B.name.toUpperCase()+' DEFEATED · '+left.length+' TO GO',4200);}
 function bossAI(e,dt){const B=e.B,g=e.g,D=e.D,H0=SPR[e.type].h,to=_f.set(P.pos.x-g.position.x,0,P.pos.z-g.position.z),dist=to.length(),dirv=to.clone().normalize(),perp=new THREE.Vector3(dirv.z,0,-dirv.x);e.t+=dt;
   if(!e.engaged){if(dist<66&&G.state==='play'){e.engaged=true;e.cd=1.6;bossIntro(e);}else{e.sprite.position.y=H0/2+Math.sin(e.t*1.5)*.15;return;}}
@@ -621,7 +621,7 @@ function update(dt){
     else{near.prog=Math.max(0,(near.prog||0)-dt*.5);pg.style.opacity=near.prog>0?1:0;pg.firstElementChild.style.width=near.prog*100+'%';}}
   else{pr.style.opacity=0;pg.style.opacity=0;}
   const actN=P.pos.z>-60?0:P.pos.z>-168?1:P.pos.z>-290?2:3;if(actN!==G.act){G.act=actN;msg(['ACT I · THE FOYER · Port Highwater','ACT II · THE ORCHESTRA PIT · The Grand Aqueduct','ACT III · THE AUDITORIUM · The Coral Opera','ACT IV · THE STAGE · The Sunken Playhouse'][actN],3400);}
-  for(let i=pickups.length-1;i>=0;i--){const k=pickups[i];k.t+=dt;k.g.rotation.y+=dt;k.g.position.y=.35+Math.sin(k.t*2)*.05;if(Math.hypot(k.x-P.pos.x,k.z-P.pos.z)<1.3){if(k.kind==='med'&&squad.some(s=>s.avail&&!s.down&&s.hp<s.max)){for(const s of squad)if(s.avail&&!s.down)s.hp=Math.min(s.max,s.hp+35);msg('+ Company vitals');}else if(k.kind==='ammo'&&P.res<W().res*1.6){P.res=Math.min(Math.round(W().res*1.6),P.res+Math.round(W().res*.4));msg('+ Ammunition');}else continue;sfx.pick();scene.remove(k.g);pickups.splice(i,1);}}
+  for(let i=pickups.length-1;i>=0;i--){const k=pickups[i];k.t+=dt;k.g.rotation.y+=dt;k.g.position.y=.35+Math.sin(k.t*2)*.05;if(Math.hypot(k.x-P.pos.x,k.z-P.pos.z)<1.3){if(k.kind==='med'&&squad.some(s=>s.avail&&!s.down&&s.hp<s.max)){for(const s of squad)if(s.avail&&!s.down)s.hp=Math.min(s.max,s.hp+35);msg('+ Company vitals');}else if(k.kind==='ammo'&&squad.some(s=>s.avail&&s.res<s.def.w.res*3)){for(const s of squad)if(s.avail)s.res=Math.min(s.def.w.res*3,s.res+Math.round(s.def.w.res*.5));msg('+ Ammunition for the whole company');}else continue;sfx.pick();scene.remove(k.g);pickups.splice(i,1);}}
   P.hurtT=Math.max(0,P.hurtT-dt);updEnemies(dt);updAllies(dt);updFx(dt);updWar(dt);
   for(let i=later.length-1;i>=0;i--)if(later[i].t<=G.t){const f=later[i].fn;later.splice(i,1);f();}
 }
