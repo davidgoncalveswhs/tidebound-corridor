@@ -332,10 +332,10 @@ addEventListener('keydown',e=>{keys[e.code]=true;if(G.state!=='play')return;if(e
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyF')releaseHook(false);});
 let mouseDown=false,mouseR=false,locked=false;addEventListener('mousedown',e=>{if(G.state!=='play')return;if(e.button===0){mouseDown=true;P.edge=true;}if(e.button===2)mouseR=true;});addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)mouseR=false;});addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(G.state!=='play')return;const h=H(),w=W();h.zoom=clamp(h.zoom*(e.deltaY<0?1.14:1/1.14),w.zmin,w.zmax);},{passive:true});
-const sens=()=>.0021/Math.pow(1+(H().zoom-1)*P.ads,.9);
-addEventListener('mousemove',e=>{if(!locked||G.state!=='play')return;P.yaw-=e.movementX*sens();P.pitch=clamp(P.pitch-e.movementY*sens(),-1.5,1.5);});
+const sens=()=>.0021*ST.sens/Math.pow(1+(H().zoom-1)*P.ads,.9);
+addEventListener('mousemove',e=>{if(!locked||G.state!=='play')return;P.yaw-=e.movementX*sens();P.pitch=clamp(P.pitch-e.movementY*sens()*(ST.invY?-1:1),-1.5,1.5);});
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===cv;if(!locked&&G.state==='play'&&!P.dead&&!G.done){G.state='pause';$('pause').classList.remove('hide');}});
-function begin(){audio();if(AC&&AC.state==='suspended')AC.resume();$('start').classList.add('hide');$('pause').classList.add('hide');const first=G.t===0;G.state='play';try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}if(first){setTimeout(()=>say('Madame Coralie','Ondine, the aqueduct is singing again. Find the Tuning Fork, and see who the song has caged.','#e9c98a',6500),600);}}
+function begin(){audio();musInit();applySettings();if(AC&&AC.state==='suspended')AC.resume();$('start').classList.add('hide');$('pause').classList.add('hide');const first=G.t===0;G.state='play';try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}if(first){setTimeout(()=>say('Madame Coralie','Ondine, the aqueduct is singing again. Find the Tuning Fork, and see who the song has caged.','#e9c98a',6500),600);}}
 $('go').onclick=begin;$('resume').onclick=begin;
 // ---------- the weapon in your hands ----------
 const vm=new THREE.Group();camera.add(vm);vm.position.set(.21,-.23,-.52);let gunG=null,armsG=null,gunHolder=vm,tpOn=true,gunMag=null;const debris=[];
@@ -431,7 +431,7 @@ function shoot(){const w=W(),o=tpOn?camera.position.clone():eye(),spread=(w.spre
   const tr=tracers[trI++%tracers.length];tr.l.geometry.setFromPoints([mz,end]);tr.l.material.color.setHex(w.acc);tr.l.material.opacity=.8;tr.t=.05;
   P.mag--;P.cd=1/(w.rate*(G.blue>0?1.9:1));P.kick=Math.min(1,P.kick+(w.auto?.22:.7));P.pitch+=(w.auto?.005:.016)+R()*.003;P.yaw+=rr(-.002,.002);flash.material.opacity=1;flash.rotation.z=R()*TAU;flashL.intensity=14;if(!tpOn)vm.position.z+=w.auto?.03:.07;sfx.shot(H().def.w.name);
   for(const e of enemies)if(!e.dead&&e.state==='idle'&&e.g.position.distanceTo(P.pos)<45)e.state='chase';}
-function hitEnemy(e,dmg,head,p,skill,quiet){dmg=Math.round(dmg);if(e.shield>0){e.shield-=dmg;dmg=Math.max(1,Math.round(dmg*.1));if(e.shield<=0)msg('SHIELD BROKEN',900);}e.hp-=dmg;e.fl=.1;e.mats.forEach(m=>m.emissive.setHex(0xff3322));if(!skill){G.hits++;const h=H();h.ult=Math.min(100,h.ult+dmg*.28);}burst(p,head?0xffe07a:0x9affd8,head?16:10,4,.45,8);const hm=$('hitm');if(!quiet){hm.className='hud on';sfx.hit();}if(e.state==='idle')e.state='chase';
+function hitEnemy(e,dmg,head,p,skill,quiet){dmg=Math.round(dmg*DIFF[ST.diff].out);if(e.shield>0){e.shield-=dmg;dmg=Math.max(1,Math.round(dmg*.1));if(e.shield<=0)msg('SHIELD BROKEN',900);}e.hp-=dmg;e.fl=.1;e.mats.forEach(m=>m.emissive.setHex(0xff3322));if(!skill){G.hits++;const h=H();h.ult=Math.min(100,h.ult+dmg*.28);}burst(p,head?0xffe07a:0x9affd8,head?16:10,4,.45,8);const hm=$('hitm');if(!quiet){hm.className='hud on';sfx.hit();}if(e.state==='idle')e.state='chase';
   if(e.hp<=0&&!e.dead){e.dead=true;e.dt=0;G.kills++;if(!quiet)hm.className='hud on kill';burst(p,0x9affd8,34,6,.9,6);sfx.growl();if(e.D.boss){bossDown(e);}else if(R()<.3)pickup(R()>.5?'med':'ammo',e.g.position.x,e.g.position.z);}setTimeout(()=>hm.classList.remove('on'),70);}
 function reload(){if(P.reload>0||P.mag>=W().mag||P.res<=0||P.dead||G.state!=='play')return;P.reload=G.blue>0?.4:W().reload;P.relDur=P.reload;sfx.reload();}
 // switching, skills and ultimates
@@ -457,7 +457,7 @@ const SK={
  mirelle:{q(){for(const h of squad)if(h.avail&&!h.down)h.hp=Math.min(h.max,h.hp+30);ringFx(P.pos,0x8affb0,.5,9,.9);ringFx(P.pos,0xc79aff,.5,6,.7,.2);burst(eye(),0x8affb0,50,3,1.2,-1);sfx.heal();msg('TIDAL PSALM',1100);},
   x(){let n=0;for(const h of squad)if(h.avail){if(h.down){h.down=false;h.hp=h.max*.5;n++;}else h.hp=Math.min(h.max,h.hp+h.max*.5);}ringFx(P.pos,0x8affb0,.5,16,1.1);ringFx(P.pos,0xc79aff,.5,12,.9,.25);burst(eye(),0xc79aff,90,6,1.4,-1);whiteFlash(.35);sfx.ult();msg(n?'THE FALLEN RISE':'DROWNED GRACE',1600);}}
 };
-function hurt(dmg,from){if(P.dead||G.done)return;dmg*=G.guard>0?.4:1;const h=H();h.hp-=dmg;P.lastHurt=G.t;P.hurtT=.5;sfx.hurt();shake=.4;
+function hurt(dmg,from){if(P.dead||G.done)return;dmg*=(G.guard>0?.4:1)*DIFF[ST.diff].inc;const h=H();h.hp-=dmg;P.lastHurt=G.t;P.hurtT=.5;sfx.hurt();shake=.4;
   const dx=from.x-P.pos.x,dz=from.z-P.pos.z,ang=Math.atan2(dx,-dz)-(-P.yaw),hu=$('hurt');hu.style.transform=`rotate(${ang*180/Math.PI}deg)`;hu.style.opacity=1;
   if(h.hp<=0){h.hp=0;h.down=true;const nx=squad.findIndex(s=>s.avail&&!s.down);msg(h.def.short+' is down',2200);if(nx<0){die();return;}P.cur=nx;P.reload=0;buildGun(W());swapT=.5;refreshRigs();}}
 let shake=0;
@@ -590,8 +590,8 @@ sfx.boom=()=>{noise(1.4,180,.7);tone(55,1.2,.5,'sine',-20);};sfx.wave=()=>{noise
 // ---------- main update ----------
 function update(dt){
   if(G.state!=='play')return;G.t+=dt;G.blue=Math.max(0,G.blue-dt);G.guard=Math.max(0,G.guard-dt);swapT=Math.max(0,swapT-dt);if(G.blue<=0&&G.guard<=0)$('tint').style.opacity=0;
-  const look=(keys.ArrowLeft?1:0)-(keys.ArrowRight?1:0),lv=(keys.ArrowUp?1:0)-(keys.ArrowDown?1:0);P.yaw+=look*1.9*dt;P.pitch=clamp(P.pitch+lv*1.4*dt,-1.5,1.5);
-  const fw=(keys.KeyW?1:0)-(keys.KeyS?1:0),st=(keys.KeyD?1:0)-(keys.KeyA?1:0),sprint=keys.ShiftLeft&&fw>0&&P.reload<=0;
+  const look=(keys.ArrowLeft?1:0)-(keys.ArrowRight?1:0),lv=(keys.ArrowUp?1:0)-(keys.ArrowDown?1:0);P.yaw+=look*1.9*dt-AX.lx*2.6*ST.sens*dt;P.pitch=clamp(P.pitch+lv*1.4*dt-AX.ly*1.9*ST.sens*dt*(ST.invY?-1:1),-1.5,1.5);
+  const fw=clamp((keys.KeyW?1:0)-(keys.KeyS?1:0)+AX.fw,-1,1),st=clamp((keys.KeyD?1:0)-(keys.KeyA?1:0)+AX.st,-1,1),sprint=(keys.ShiftLeft||AX.sprint)&&fw>0&&P.reload<=0;
   const sy=Math.sin(P.yaw),cy=Math.cos(P.yaw),wish=new THREE.Vector3(-sy*fw+cy*st,0,-cy*fw-sy*st);if(wish.lengthSq()>0)wish.normalize();
   const sp=(sprint?8:4.6)*H().def.speed*(P.reload>0?.85:1)*(1-.35*P.ads);P.ads+=((mouseR&&P.reload<=0&&swapT<=0&&!sprint&&!P.dead?1:0)-P.ads)*Math.min(1,dt*9);const hk=P.hook,dmp=P.ground?12:(P.glide>0?.35:2.5);P.glide=P.ground?0:Math.max(0,P.glide-dt);hk.cd=Math.max(0,hk.cd-dt);
   if(!hk.on&&!P.glideOn){P.vel.x+=(wish.x*sp-P.vel.x)*Math.min(1,dmp*dt);P.vel.z+=(wish.z*sp-P.vel.z)*Math.min(1,dmp*dt);}else{P.vel.x+=wish.x*20*dt;P.vel.z+=wish.z*20*dt;}
@@ -698,7 +698,7 @@ function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur
 function setView(tp,quiet){tpOn=tp;gunHolder=tp?gunRoot:vm;gunHolder.add(gunG,flash,flashL);if(!tp){gunG.position.set(0,0,0);}armsG.visible=!tp;vm.visible=!tp;gunRoot.visible=tp;tpRoot.visible=tp;refreshRigs();if(!quiet)msg(tp?'THIRD PERSON':'FIRST PERSON',900);}
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&G.state==='play')setView(!tpOn);});
 const gripL=V3(0,-.12,.09),foreL=V3(-.02,-.07,-.3);
-function updRig(r,dt){const p=r.pivot,B=r.B;p.position.set(P.pos.x,P.pos.y,P.pos.z);const ty=P.yaw+Math.PI;if(r.yaw===undefined)r.yaw=ty;let dy=ty-r.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));r.yaw+=dy*Math.min(1,dt*14);r.lean+=((P.glideOn?1:0)-r.lean)*Math.min(1,dt*7);p.rotation.y=r.yaw;p.rotation.x=r.lean*1.2;p.rotation.z=P.dead?1.3:0;p.position.y+=Math.sin(r.lean*1.2)*.75;p.updateMatrixWorld(true);
+function updRig(r,dt){const p=r.pivot,B=r.B;p.position.set(P.pos.x,P.pos.y,P.pos.z);const ty=P.yaw+Math.PI;if(r.yaw===undefined)r.yaw=ty;let dy=ty-r.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));r.yaw+=dy*Math.min(1,dt*14);r.lean+=((P.glideOn?1:0)-r.lean)*Math.min(1,dt*7);p.rotation.y=r.yaw;p.rotation.x=r.lean*1.2;p.rotation.z=P.dead?1.3:0;bodyLang(r,dt);p.position.y+=Math.sin(r.lean*1.2)*.75;p.updateMatrixWorld(true);
   if(r.kick>0){r.kick-=dt;r.mixer.update(dt);if(r.kick<=0){r.mixer.stopAllAction();for(const [b,q] of r.rest)b.quaternion.copy(q);B.Hips.position.copy(r.hips0);}else{flash.material.opacity=0;return 'kick';}}
   for(const [b,q] of r.rest)b.quaternion.copy(q);B.Hips.position.copy(r.hips0);p.updateMatrixWorld(true);
   const spd0=Math.hypot(P.vel.x,P.vel.z),useClip=!!r.walkAct&&P.ground&&!P.glideOn&&!P.hook.on&&spd0>.4;
@@ -743,10 +743,104 @@ function updWings(dt,rg){const want=P.glideOn&&tpOn&&!scopeOn?1:0;P.wingK+=(want
   const k=P.wingK,fl=Math.sin(G.t*5)*.12*k;wingsG.scale.setScalar(.15+.85*k);
   wingL.rotation.set(-Math.PI/2+.12,-.5-fl,.18+fl);wingR.rotation.set(-Math.PI/2+.12,.5+fl,-.18-fl);wingL.position.set(.1,0,0);wingR.position.set(-.1,0,0);}
 
+// ---------- settings, difficulty, retry, music, voices, tutorial, gamepad, touch ----------
+const ST=Object.assign({sens:1,vol:.8,music:.5,voices:false,fov:74,quality:'high',diff:'normal',invY:false,hints:true},(()=>{try{return JSON.parse(localStorage.getItem('tidebound_front_set')||'{}');}catch(e){return {};}})());
+const saveST=()=>{try{localStorage.setItem('tidebound_front_set',JSON.stringify(ST));}catch(e){}};
+const DIFF={story:{inc:.55,out:1.5,name:'Story'},normal:{inc:1,out:1,name:'Normal'},hard:{inc:1.45,out:.85,name:'Hard'}};
+const AX={fw:0,st:0,lx:0,ly:0,sprint:false};
+function applyQuality(){const q=ST.quality;renderer.setPixelRatio(q==='low'?.75:q==='med'?1:Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=q!=='low';scene.traverse(o=>{if(o.material&&o.material.needsUpdate!==undefined&&o.receiveShadow)o.material.needsUpdate=true;});resize();}
+function applySettings(){if(master)master.gain.value=ST.vol;if(musicG)musicG.gain.value=ST.music*.5;applyQuality();saveST();}
+// settings panel
+{const d=document.createElement('div');d.className='ov hide';d.id='set';d.innerHTML=`<div class="card"><div class="eb">Intermission</div><h1>Settings</h1><div class="setg">
+<label>Difficulty<select id="sDiff"><option value="story">Story (gentler)</option><option value="normal">Normal</option><option value="hard">Hard</option></select></label>
+<label>Mouse sensitivity<input type="range" id="sSens" min="0.3" max="2.5" step="0.05"></label>
+<label>Field of view<input type="range" id="sFov" min="60" max="100" step="1"></label>
+<label>Sound volume<input type="range" id="sVol" min="0" max="1" step="0.05"></label>
+<label>Music volume<input type="range" id="sMus" min="0" max="1" step="0.05"></label>
+<label>Graphics<select id="sQ"><option value="low">Low (fastest)</option><option value="med">Medium</option><option value="high">High</option></select></label>
+<label>Spoken voices (browser speech)<input type="checkbox" id="sVoi"></label>
+<label>Invert look Y<input type="checkbox" id="sInv"></label>
+<label>Tutorial hints<input type="checkbox" id="sHint"></label></div><button class="btn" id="sBack">Back</button></div>`;document.body.appendChild(d);
+const st=document.createElement('style');st.textContent=`.setg{display:grid;gap:10px;margin:14px 0;text-align:left;font-size:14px}.setg label{display:flex;justify-content:space-between;align-items:center;gap:18px;color:var(--ink)}.setg input[type=range]{width:200px}.setg select{background:#12151c;color:var(--ink);border:1px solid var(--mute);padding:4px 8px}.sbtn{display:inline-block;margin:8px 8px 0 0;background:none;border:1px solid var(--mute);color:var(--ink);padding:7px 16px;cursor:pointer;font:inherit;letter-spacing:.06em}#tut{left:50%;top:92px;transform:translateX(-50%);text-align:center;font:15px Georgia,serif;background:rgba(8,10,14,.72);border:1px solid rgba(255,208,112,.5);padding:8px 16px;opacity:0;transition:opacity .4s;max-width:80vw}#tut b{color:#ffd070}#touch{position:fixed;inset:0;display:none;z-index:5;pointer-events:none}#touch .tb{position:absolute;pointer-events:auto;width:58px;height:58px;border-radius:50%;background:rgba(10,12,18,.55);border:2px solid rgba(255,255,255,.35);color:#fff;font:700 13px system-ui;display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}#touch .tb.on{background:rgba(255,208,112,.5)}#tjoy{position:absolute;left:24px;bottom:30px;width:130px;height:130px;border-radius:50%;background:rgba(10,12,18,.4);border:2px solid rgba(255,255,255,.3);pointer-events:auto;touch-action:none}#tjoy i{position:absolute;left:44px;top:44px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.4)}`;document.head.appendChild(st);
+const $s=id=>document.getElementById(id);let back=null;
+const sync=()=>{$s('sDiff').value=ST.diff;$s('sSens').value=ST.sens;$s('sFov').value=ST.fov;$s('sVol').value=ST.vol;$s('sMus').value=ST.music;$s('sQ').value=ST.quality;$s('sVoi').checked=ST.voices;$s('sInv').checked=ST.invY;$s('sHint').checked=ST.hints;};
+window.openSettings=from=>{back=from;from.classList.add('hide');d.classList.remove('hide');sync();};
+$s('sBack').onclick=()=>{d.classList.add('hide');if(back)back.classList.remove('hide');};
+const bind=(id,k,f=v=>v,ev='input')=>$s(id).addEventListener(ev,e=>{ST[k]=f(e.target.type==='checkbox'?e.target.checked:e.target.value);applySettings();if(k==='diff')msg('Difficulty: '+DIFF[ST.diff].name,1200);});
+bind('sDiff','diff',v=>v,'change');bind('sSens','sens',parseFloat);bind('sFov','fov',parseFloat);bind('sVol','vol',parseFloat);bind('sMus','music',parseFloat);bind('sQ','quality',v=>v,'change');bind('sVoi','voices',v=>v,'change');bind('sInv','invY',v=>v,'change');bind('sHint','hints',v=>v,'change');
+for(const [pid,lab] of [['start','Settings'],['pause','Settings']]){const p=$s(pid),b=document.createElement('button');b.className='sbtn';b.textContent=lab;b.onclick=()=>window.openSettings(p);p.querySelector('.card').appendChild(b);}
+}
+// retry from a checkpoint (death or pause)
+const CKP=[[0,54],[0,-70],[0,-176],[0,-298]];
+function retry(){const a=Math.max(0,G.act),[cx,cz]=CKP[a];P.dead=false;for(const s of squad){if(s.avail){s.down=false;s.hp=s.max;s.mag=s.def.w.mag;s.res=Math.max(s.res,Math.round(s.def.w.res*1.2));}}P.cur=squad.findIndex(s=>s.avail&&!s.down)||0;if(P.cur<0)P.cur=0;P.reload=0;buildGun(W());
+ P.pos.set(cx,floorY(cx,cz,40,0),cz);P.vel.set(0,0,0);P.hook.on=false;P.glideOn=false;
+ for(const e of enemies){if(e.dead)continue;if(e.B||e.state!=='idle'){if(e.B){e.hp=e.max;e.engaged=false;e.shield=0;}else if(e.g.position.distanceTo(P.pos)<60){e.hp=e.max;}if(e.state!=='idle'&&!e.B)e.state='idle';}}
+ for(const a of allies)if(a.dead&&a.g)a.g.visible=false;
+ refreshRigs();$('end').classList.add('hide');G.state='play';G.done=false;try{const p=cv.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}msg('Back to the last act — the company regroups',2200);}
+{const b=document.createElement('button');b.className='btn';b.textContent='Retry from this act';b.onclick=retry;$('end').querySelector('.btn').before(b);window.__retry=retry;}
+{const b=document.createElement('button');b.className='sbtn';b.textContent='Restart act';b.onclick=()=>{$('pause').classList.add('hide');retry();};$('pause').querySelector('.card').appendChild(b);}
+// ----- procedural music: pads by act, pulse in combat, drums for bosses -----
+let musicG=null,musOn=false,nextT=0,beat=0,combat=false,bossOn=false;
+const MODES=[[146.83,[0,3,-2,-4]],[130.81,[0,-4,3,-2]],[110,[0,-2,3,5]],[92.5,[0,-4,-2,-7]]]; // roots and chord roots in semitones
+const mtof=(r,s)=>r*Math.pow(2,s/12);
+function musInit(){if(!AC||musicG)return;musicG=AC.createGain();musicG.gain.value=ST.music*.5;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2400;musicG.connect(lp);lp.connect(master);musOn=true;nextT=AC.currentTime+.1;beat=0;}
+function mnote(f,t,d,type,v,det=0){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;o.detune.value=det;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+Math.min(.4,d*.3));g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(musicG);o.start(t);o.stop(t+d+.05);}
+function mdrum(t,low){const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(low?110:200,t);o.frequency.exponentialRampToValueAtTime(40,t+.18);g.gain.setValueAtTime(low?.55:.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.connect(g);g.connect(musicG);o.start(t);o.stop(t+.3);}
+function musTick(){if(!AC||!musicG||G.state!=='play'||ST.music<=0)return;const bpm=bossOn?118:combat?96:62,bt=60/bpm/2;
+ while(nextT<AC.currentTime+.4){const m=MODES[Math.max(0,G.act)%4],bar=Math.floor(beat/8),ch=m[1][bar%4],root=mtof(m[0],ch),minor=[0,3,7,10];
+  if(beat%8===0){for(const s of [0,7,12,15])mnote(mtof(root,s),nextT,bt*8,'sawtooth',.05,(s%3-1)*8);mnote(root/2,nextT,bt*8,'sine',.16);}
+  if(combat||bossOn){const s=minor[(beat*3+bar)%4]+(beat%4===3?12:0);mnote(mtof(root*2,s),nextT,bt*.9,'triangle',.07);}
+  if(bossOn&&beat%2===0)mdrum(nextT,beat%4===0);else if(combat&&beat%4===0)mdrum(nextT,true);
+  if(!combat&&!bossOn&&beat%16===8)mnote(mtof(root*4,minor[bar%4]),nextT,bt*5,'sine',.05);
+  nextT+=bt;beat++;}}
+setInterval(musTick,120);
+setInterval(()=>{if(G.state!=='play')return;let c=false,b=false;for(const e of enemies){if(e.dead)continue;if(e.B&&e.engaged&&e.g.position.distanceTo(P.pos)<110)b=true;else if(e.state!=='idle'&&e.g.position.distanceTo(P.pos)<46)c=true;}combat=c;bossOn=b;},500);
+// ----- voices: the story's own lines, spoken with the browser's speech if enabled -----
+const VOICE={ondine:{p:1.25,r:1},caliste:{p:.95,r:1.05},tobias:{p:.6,r:.9},mirelle:{p:1.5,r:.95}};
+function speak(who,text){if(!ST.voices||!window.speechSynthesis)return;try{const id=Object.keys(CAST).find(k=>CAST[k].name===who||CAST[k].short===who),v=VOICE[id]||{p:1,r:1},u=new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g,''));u.pitch=v.p;u.rate=v.r;u.volume=Math.min(1,ST.vol+.2);speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+const _say=say;say=function(who,text,col,ms){_say(who,text,col,ms);speak(who,text);};
+const BARK={kill:{ondine:['One more verse done.','Next soloist.','That was my cue.'],caliste:['Target down.','Steady.','Clean.'],tobias:['Stay down!','Not on my stage.'],mirelle:['Hush now.','Be at peace.']},hurt:{ondine:['Still standing!'],caliste:['Not dead yet.'],tobias:['Hurts, but I hold!'],mirelle:['Mind the harmony!']},low:{ondine:['I need a moment!'],caliste:['Covering — I am hurt.'],tobias:['Cover me!'],mirelle:['I cannot sing through this!']},boss:{ondine:['Hold the line, everyone.'],caliste:['That is a very large target.'],tobias:['Brace yourselves!'],mirelle:['It hears us.']}};
+let barkT=0;function bark(k){if(!ST.voices&&!ST.hints)return;if(G.t<barkT)return;const h=H().id,pool=(BARK[k]||{})[h];if(!pool)return;barkT=G.t+12;const t=pool[Math.floor(Math.random()*pool.length)];if(ST.voices)speak(H().def.short,t);const s=$('sub');if(k==='boss'||k==='low')say(H().def.short,t,H().def.col,2600);}
+let lastK=0,lastHp=0,lastBossSeen=false;
+setInterval(()=>{if(G.state!=='play')return;if(G.kills>lastK&&G.kills%5===0)bark('kill');lastK=G.kills;const h=H();if(h.hp/h.max<.3&&lastHp>=.3)bark('low');lastHp=h.hp/h.max;if(bossOn&&!lastBossSeen)bark('boss');lastBossSeen=bossOn;},700);
+// ----- tutorial hints -----
+{const el=document.createElement('div');el.className='hud';el.id='tut';document.body.appendChild(el);
+const tstate={mv:0,ads:0,rl:0,hk:0,gl:0,sw:0,sk:0,fire:0};let ti=0,tdone=!1,tcool=0;
+const STEPS=[['<b>W A S D</b> to move, <b>Shift</b> to sprint',()=>tstate.mv>14],['Hold <b>right mouse</b> to aim down the scope — scroll to zoom',()=>tstate.ads>.6],['Press <b>R</b> to swap magazines',()=>tstate.rl],['Aim at something high, hold <b>F</b> to fire the fly-line, then release to launch',()=>tstate.hk],['Press <b>Space</b> in the air to unfurl your glider wings',()=>tstate.gl],['Press <b>1-4</b> to swap company members',()=>tstate.sw],['Press <b>Q</b> for your skill, <b>X</b> for your ultimate',()=>tstate.sk]];
+addEventListener('keydown',e=>{if(G.state!=='play')return;if(e.code==='KeyR')tstate.rl=1;if(e.code==='KeyF')tstate.hk=1;if(e.code==='KeyQ'||e.code==='KeyX')tstate.sk=1;if(/^Digit[1-4]$/.test(e.code))tstate.sw=1;});
+let tpos=null;
+setInterval(()=>{if(G.state!=='play'||!ST.hints){el.style.opacity=0;return;}if(!tpos)tpos=P.pos.clone();tstate.mv+=0;tstate.mv=Math.max(tstate.mv,P.pos.distanceTo(tpos));tstate.ads=Math.max(tstate.ads,P.ads);if(P.glideOn)tstate.gl=1;if(ti>=STEPS.length){el.style.opacity=0;return;}
+ if(STEPS[ti][1]()){ti++;tcool=1.5;el.style.opacity=0;if(ti>=STEPS.length){msg('Hints complete — the rest is yours',1800);}return;}
+ if(tcool>0){tcool-=.5;return;}el.innerHTML=STEPS[ti][0];el.style.opacity=1;},500);
+window.__tut=tstate;}
+// ----- gamepad + touch feed the same movement/look/fire state -----
+const padPrev={};let padOn=false;
+function pollPad(dt){const gp=(navigator.getGamepads&&[...navigator.getGamepads()].find(g=>g&&g.connected));if(!gp){if(padOn){padOn=false;AX.fw=AX.st=AX.lx=AX.ly=0;}return;}padOn=true;const dz=v=>Math.abs(v)<.18?0:v,a=gp.axes,b=gp.buttons.map(x=>x.pressed),pr=(i)=>b[i]&&!padPrev[i];
+ AX.st=dz(a[0]);AX.fw=-dz(a[1]);AX.lx=dz(a[2]);AX.ly=dz(a[3]);AX.sprint=b[10];
+ if(G.state==='menu'||G.state==='pause'){if(pr(0)||pr(9))begin();}else if(G.state==='dead'||G.state==='won'){if(pr(0))retry();}
+ else if(G.state==='play'){mouseDown=b[7]||touchFire;mouseR=b[6]||touchAds;if(b[7]&&!padPrev[7])P.edge=true;if(pr(2))reload();if(pr(4))useQ();if(pr(3))useX();if(pr(1))setView(!tpOn);if(pr(14)||pr(15)){const n=(P.cur+(pr(15)?1:3))%4;switchTo(n);}
+  if(pr(5))fireHook();if(!b[5]&&padPrev[5])releaseHook(false);if(pr(0)){padSpace=true;toggleGlide();}if(!b[0])padSpace=false;if(pr(9)){G.state='pause';$('pause').classList.remove('hide');}}
+ for(let i=0;i<b.length;i++)padPrev[i]=b[i];}
+let padSpace=false,touchFire=false,touchAds=false,touchSpace=false;
+{const isT=('ontouchstart'in window)||(matchMedia&&matchMedia('(pointer:coarse)').matches);if(isT){const t=document.createElement('div');t.id='touch';t.innerHTML='<div id="tjoy"><i></i></div>';document.body.appendChild(t);
+ const btn=(txt,r,b,fn,up)=>{const e=document.createElement('div');e.className='tb';e.textContent=txt;e.style.right=r+'px';e.style.bottom=b+'px';e.addEventListener('touchstart',ev=>{ev.preventDefault();e.classList.add('on');fn();},{passive:false});e.addEventListener('touchend',ev=>{ev.preventDefault();e.classList.remove('on');if(up)up();},{passive:false});t.appendChild(e);};
+ btn('FIRE',30,90,()=>{touchFire=true;mouseDown=true;P.edge=true;},()=>{touchFire=false;mouseDown=false;});btn('AIM',100,170,()=>{touchAds=true;mouseR=true;},()=>{touchAds=false;mouseR=false;});btn('JUMP',100,30,()=>{keys.Space=true;toggleGlide();},()=>{keys.Space=false;});btn('R',170,100,()=>reload());btn('HOOK',30,170,()=>fireHook(),()=>releaseHook(false));btn('Q',170,170,()=>useQ());btn('X',240,100,()=>useX());btn('RUN',240,30,()=>{keys.ShiftLeft=!keys.ShiftLeft;});btn('SWAP',240,170,()=>switchTo((P.cur+1)%4));btn('II',30,260,()=>{if(G.state==='play'){G.state='pause';$('pause').classList.remove('hide');}});
+ const joy=t.querySelector('#tjoy'),knob=joy.querySelector('i');let jid=null,lid=null,lp=null;
+ joy.addEventListener('touchstart',e=>{jid=e.changedTouches[0].identifier;e.preventDefault();},{passive:false});
+ addEventListener('touchmove',e=>{for(const c of e.changedTouches){if(c.identifier===jid){const r=joy.getBoundingClientRect(),x=(c.clientX-r.left-65)/65,y=(c.clientY-r.top-65)/65,m=Math.min(1,Math.hypot(x,y)),an=Math.atan2(y,x);AX.st=Math.cos(an)*m;AX.fw=-Math.sin(an)*m;knob.style.transform=`translate(${Math.cos(an)*m*40}px,${Math.sin(an)*m*40}px)`;}else if(c.identifier===lid&&lp){P.yaw-=(c.clientX-lp.x)*.005*ST.sens;P.pitch=clamp(P.pitch-(c.clientY-lp.y)*.005*ST.sens*(ST.invY?-1:1),-1.5,1.5);lp={x:c.clientX,y:c.clientY};}}if(G.state==='play')e.preventDefault();},{passive:false});
+ addEventListener('touchend',e=>{for(const c of e.changedTouches){if(c.identifier===jid){jid=null;AX.st=AX.fw=0;knob.style.transform='';}if(c.identifier===lid)lid=lp=null;}});
+ addEventListener('touchstart',e=>{for(const c of e.changedTouches){if(lid===null&&c.clientX>innerWidth*.45&&!c.target.closest('.tb')&&!c.target.closest('.ov')){lid=c.identifier;lp={x:c.clientX,y:c.clientY};}}},{passive:true});
+ setInterval(()=>{t.style.display=G.state==='play'?'block':'none';},300);}}
+// ----- body language: recoil, flinch when hurt, breathing, topple on death -----
+function bodyLang(r,dt){const p=r.pivot,t=G.t;const hurtK=clamp(P.hurtT/.5,0,1),recoil=P.kick||0;
+ p.rotation.x+=(-recoil*.06+hurtK*.18)*(1-r.lean);if(!P.dead){const sp=Math.hypot(P.vel.x,P.vel.z);if(sp<.5&&P.ground){p.position.y+=Math.sin(t*1.8)*.012;}}
+ else{r.fall=Math.min(1,(r.fall||0)+dt*1.6);p.rotation.z=1.3*r.fall;}if(!P.dead)r.fall=0;
+ }
+
 // ---------- camera + loop ----------
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();
 let scopeOn=false;
-function frame(dt){update(dt);scopeOn=!P.dead&&W().overlay&&P.ads>.88;
+function frame(dt){pollPad(dt);update(dt);scopeOn=!P.dead&&W().overlay&&P.ads>.88;
   const sp=Math.min(1,Math.hypot(P.vel.x,P.vel.z)/4),bobY=Math.sin(P.bob*2)*.035*sp,bobX=Math.cos(P.bob)*.02*sp;shake*=Math.pow(.01,dt);
   if(tpOn){const pv=new THREE.Vector3(P.pos.x,P.pos.y+1.55,P.pos.z),f=camFwd(),rt=new THREE.Vector3(Math.cos(P.yaw),0,-Math.sin(P.yaw));let want=pv.clone().addScaledVector(f,-(2.6-.9*P.ads+(P.glideOn?1.6:0)));want.y+=.45;if(scopeOn){want=new THREE.Vector3(P.pos.x,P.pos.y+1.68,P.pos.z);}else{const dv=want.clone().sub(pv),L=dv.length();dv.normalize();ray.set(pv,dv);ray.far=L;const hh=ray.intersectObjects(solids,false)[0];if(hh)want=pv.clone().addScaledVector(dv,Math.max(.6,hh.distance-.25));}
     camera.position.lerp(want,scopeOn?1:1-Math.pow(1e-5,dt));camera.position.x+=rr(-1,1)*shake*.03;camera.position.y+=rr(-1,1)*shake*.03;camera.rotation.set(P.pitch,P.yaw,0);
@@ -759,7 +853,7 @@ function frame(dt){update(dt);scopeOn=!P.dead&&W().overlay&&P.ads>.88;
   vm.rotation.x+=(-P.kick*.05+rl*.7+spr*.25-vm.rotation.x)*Math.min(1,dt*12);vm.rotation.y+=(spr*.4-vm.rotation.y)*Math.min(1,dt*8);
   for(const t of tracers){if(t.t>0){t.t-=dt;if(t.t<=0)t.l.material.opacity=0;}}
   sun.position.set(P.pos.x+SUN.x*70,SUN.y*70+10,P.pos.z+SUN.z*70);sun.target.position.set(P.pos.x,0,P.pos.z);
-  updHook();updWings(dt,tpOn?rigs[P.cur]:null);magAnim(P.rp);const fovT=74/(1+(H().zoom-1)*P.ads)+clamp((P.vel.length()-10)*.45,0,18)*(1-P.ads);if(Math.abs(camera.fov-fovT)>.01){camera.fov=fovT;camera.updateProjectionMatrix();}
+  updHook();updWings(dt,tpOn?rigs[P.cur]:null);magAnim(P.rp);const fovT=ST.fov/(1+(H().zoom-1)*P.ads)+clamp((P.vel.length()-10)*.45,0,18)*(1-P.ads);if(Math.abs(camera.fov-fovT)>.01){camera.fov=fovT;camera.updateProjectionMatrix();}
   updP(dt);updRain(dt);updHUD();renderer.render(scene,camera);}
 let last=performance.now();function loop(now){frame(Math.min(.05,(now-last)/1000));last=now;requestAnimationFrame(loop);}requestAnimationFrame(loop);
 window.__fps={fireHook,releaseHook,spots,chand,info:()=>({calls:renderer.info.render.calls,tris:renderer.info.render.triangles,geos:renderer.info.memory.geometries,tex:renderer.info.memory.textures}),ads:v=>{mouseR=v},debris,allies,gunMagInfo:()=>gunMag&&{vis:gunMag.g.visible,y:+gunMag.g.position.y.toFixed(3),dropped:gunMag.dropped},reload,setView,rigs,get tpOn(){return tpOn},sim:(s)=>{for(let i=0;i<s*60;i++)update(1/60);},P,G,BELLS,enemies,squad,keys,H,step:(s)=>{for(let i=0;i<s*60;i++)frame(1/60);},begin:()=>{G.state='play';$('start').classList.add('hide');},shoot,useQ,useX,switchTo};
