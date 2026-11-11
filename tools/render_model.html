@@ -1,0 +1,19 @@
+<!doctype html><meta charset="utf-8"><title>Render model</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<canvas id="c"></canvas>
+<script type="module">
+// Renders a rigged .glb in its rest pose, front and back, on a transparent background, and posts the PNGs to tools/uploader.py.
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const q=new URLSearchParams(location.search),src=q.get('src')||'../3d/models/ondine.glb',name=q.get('name')||'skin-tidepoolswim',W=+(q.get('w')||640),H=+(q.get('h')||1280);
+const r=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true,preserveDrawingBuffer:true});r.setSize(W,H,false);r.setClearColor(0x000000,0);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.05;
+const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xffffff,0x8a8a99,1.5));
+const key=new THREE.DirectionalLight(0xfff4e6,2.4);scene.add(key);const fill=new THREE.DirectionalLight(0xbfd8ff,.9);scene.add(fill);
+const g=await new GLTFLoader().loadAsync(src);g.scene.traverse(o=>{if(o.isMesh){o.frustumCulled=false;if(o.material){o.material.side=THREE.DoubleSide;}}});scene.add(g.scene);
+g.scene.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(g.scene);const size=box.getSize(new THREE.Vector3()),ctr=box.getCenter(new THREE.Vector3());
+const cam=new THREE.PerspectiveCamera(20,W/H,.1,200);const dist=(size.y*1.08)/(2*Math.tan(THREE.MathUtils.degToRad(10)));
+const post=async(file)=>{const b=await new Promise(res=>document.getElementById('c').toBlob(res,'image/png'));const resp=await fetch('http://127.0.0.1:8766/save?path=assets/art/'+file,{method:'POST',body:b});return resp.status;};
+const out={};
+for(const [side,sign] of[['front',1],['back',-1]]){cam.position.set(ctr.x,ctr.y,ctr.z+sign*dist);cam.lookAt(ctr);key.position.set(ctr.x+3,ctr.y+4,ctr.z+sign*6);fill.position.set(ctr.x-4,ctr.y,ctr.z+sign*3);r.render(scene,cam);out[side]=await post(`${name}-${side}.png`);}
+document.title='done '+JSON.stringify(out)+' size '+size.toArray().map(v=>v.toFixed(2));
+</script>

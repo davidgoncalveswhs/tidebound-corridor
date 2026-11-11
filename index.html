@@ -3908,14 +3908,30 @@ function litFigure(flat, shadowA, glowA, c, x, y, s, sk, t, o) {
   c.globalAlpha = prev; return ret;
 }
 function drawHeroine(c, x, y, s, sk, t, o = {}) {
+  if (sk.art3d && SKINART[sk.id]) return drawSkinArt(c, x, y, s, sk, t, o, false);
   if ((o.look || curLook()) === 'ultimate') return drawUltimate(c, x, y, s, t, o);
   return litFigure(drawHeroineFlat, 0.5, [0.42, 0.2], c, x, y, s, sk, t, o);
 }
 function drawHeroineFront(c, x, y, s, sk, t, o = {}) {
+  if (sk.art3d && SKINART[sk.id]) return drawSkinArt(c, x, y, s, sk, t, o, true);
   if ((o.look || curLook()) === 'ultimate') return drawUltimate(c, x, y, s, t, Object.assign({ front: true }, o));
   return litFigure(drawHeroineFrontFlat, 0.45, [0.4, 0.18], c, x, y, s, sk, t, o);
 }
 // Ultimate body: a photographed figure, cut out and stood on the stage like a solid actor.
+// costumes that are shown as a render of their own 3D model (front and back), not a drawn figure
+const SKINART = {};
+function loadSkinArt(id, which, file) { const im = new Image(); im.onload = () => { (SKINART[id] = SKINART[id] || {})[which] = im; }; im.src = file; }
+loadSkinArt('tidepoolswim', 'front', 'assets/art/skin-tidepoolswim-front.png');
+loadSkinArt('tidepoolswim', 'back', 'assets/art/skin-tidepoolswim-back.png');
+function drawSkinArt(c, x, y, s, sk, t, o, front) {
+  const pack = SKINART[sk.id] || {}, art = front ? (pack.front || pack.back) : (pack.back || pack.front), h = s * 2.2, bob = Math.sin(t * 1.5) * s * 0.01;
+  c.save(); c.translate(x, y + bob); if (o.flip) c.scale(-1, 1); c.rotate((o.lean || 0) * 0.04);
+  if (o.alpha != null) c.globalAlpha = o.alpha;
+  if (!o.bare) { c.fillStyle = 'rgba(0,0,0,.42)'; c.beginPath(); c.ellipse(0, 2, s * 0.34, s * 0.07, 0, 0, TAU); c.fill(); glowAt(c, 0, -h * 0.55, s * 1.5, sk.aura || '120,180,235', o.bright ? 0.28 : 0.12, 'lighter'); }
+  if (art) { const w = h * (art.width / art.height); c.imageSmoothingEnabled = true; c.drawImage(art, -w / 2, -h, w, h); }
+  c.restore();
+  return { x, y: y - h * 0.62 };
+}
 const ULTART = {};
 const ULTGLOW = { caliste: '120,150,255', maren: '70,200,230' };
 function loadUltArt(id, which, file) {
@@ -3970,6 +3986,7 @@ function drawIsleProp(c, pr, pp) { return drawIslePropFlat(c, pr, pp); }
 
 // ================= heroine =================
 function drawHeroineFlat(c, x, y, s, sk, t, o = {}) {
+  if (sk.art3d && SKINART[sk.id]) return drawSkinArt(c, x, y, s, sk, t, o, false);
   const pick = v => v === 'rainbow' ? rainbow(t) : v, look = o.look || curLook();
   const k = o.recoil || 0, lean = clamp(o.lean || 0, -1, 1), moving = o.moving || 0;
   c.save(); c.translate(x, y); c.rotate(lean * 0.1);
@@ -5693,6 +5710,7 @@ function drawUltPanel(c, k, sk, R) {
 
 // Ondine facing the camera: used for the close-up and the top-down ballroom.
 function drawHeroineFrontFlat(c, x, y, s, sk, t, o = {}) {
+  if (sk.art3d && SKINART[sk.id]) return drawSkinArt(c, x, y, s, sk, t, o, true);
   const look = o.look || curLook(), pick = v => v === 'rainbow' ? rainbow(t) : v, raise = o.raise || 0, walk = o.walk || 0, hc = sk.hair;
   const irisHex = sk.streak === 'rainbow' ? '#a8b8ff' : sk.streak;
   c.save(); c.translate(x, y); if (o.flip) c.scale(-1, 1); c.rotate((o.lean || 0) * 0.08);
@@ -19143,7 +19161,7 @@ document.addEventListener('click', e => {
 
 
 // ================= Lady Ondine’s swimsuit: only from the box office, and the 3D war uses her swimsuit model when it is equipped =================
-SKINS.push({ id: 'tidepoolswim', name: 'Tidepool Bloom', cost: 0, summer: 'beach', bikini: true, unlock: 'Only from the Tidepool Summer programme in the box office.', desc: 'Summer wear: a steel-blue halter two-piece with pale trim, copper hair and a white flower tucked above one ear. Worn by Lady Ondine in the 3D war.', coat: '#3d6f9d', torso: '#6a9acb', trim: '#e4ecf6', hair: '#b4623a', streak: '#e09a60', hat: '#2c5478', band: '#9ac4ee', bolt: '#cfe6ff', aura: '120,180,235', sleeve: '#f3d3c0' });
+SKINS.push({ id: 'tidepoolswim', name: 'Tidepool Bloom', cost: 0, summer: 'beach', bikini: true, art3d: true, unlock: 'Only from the Tidepool Summer programme in the box office.', desc: 'Summer wear: a steel-blue halter two-piece and short copper hair. Shown as a render of her 3D model, which she wears in the 3D war.', coat: '#3d6f9d', torso: '#6a9acb', trim: '#e4ecf6', hair: '#b4623a', streak: '#e09a60', hat: '#2c5478', band: '#9ac4ee', bolt: '#cfe6ff', aura: '120,180,235', sleeve: '#f3d3c0' });
 SKIN5.tidepoolswim = 1;
 BANNERS.tidepool = { name: 'Tidepool Summer', ey: 'Costume programme', blurb: 'Lady Ondine’s summer two-piece, Tidepool Bloom, is featured. Opening night is always the swimsuit. Equip it from the Dressing Room or the Characters page once it is yours, and she wears it in the Drowned Front.', face: 'tidepoolswim', up5: 'tidepoolswim', pool5: [], up4: null, pool4: ['midnight', 'sakura', 'seaside', 'lagoon'] };
 // ================= The Drowned Front: the 3D war pays out into the main game =================
