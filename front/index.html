@@ -699,7 +699,7 @@ function loadFloatModel(idx,url,allowed){
     root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;if(o.material){o.material.envMapIntensity=.7;o.material.side=THREE.DoubleSide;}}});
     const old=rigs[idx];if(old)tpRoot.remove(old.pivot);const r={pivot,root,B:{},rest:new Map(),ph:0,kick:0,yaw:undefined,lean:0,static:true,aura:old&&old.aura};tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
 const mirelleJoined=!!(SAVE.campaign&&SAVE.campaign.party&&SAVE.campaign.party.includes('mirelle'));
-loadFloatModel(3,'../3d/models/mirelle.glb?v=1',mirelleJoined);
+loadFloatModel(3,'../3d/models/mirelle.glb?v=1',true);
 loadRigModel(0,'../3d/models/ondine.glb?v=3',beachOndine);
 loadRigModel(1,'../3d/models/caliste.glb?v=2',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
 function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur&&!P.dead||(tpOn&&P.dead&&i===P.cur);});}
