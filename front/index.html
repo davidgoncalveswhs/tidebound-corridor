@@ -692,13 +692,28 @@ function loadRigModel(idx,url,allowed){
     const old=rigs[idx];if(old)tpRoot.remove(old.pivot);const r=mkRig(root,pivot);r.aura=old&&old.aura;
     if(g.animations&&g.animations.length){r.mixer=new THREE.AnimationMixer(root);r.clip=g.animations.find(a=>/kick/i.test(a.name))||null;const wc=g.animations.find(a=>/walk/i.test(a.name));if(wc){const tk=wc.tracks.find(x=>x.name==='Hips.position');if(tk){const v=tk.values;for(let i=0;i<v.length;i+=3){v[i]=v[0];v[i+2]=v[2];}}r.walkAct=r.mixer.clipAction(wc);r.walkAct.play();r.walkAct.enabled=false;}}
     tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
+// Mirelle has no legs: her model is a still body that floats, drifts and tilts with her movement
+function loadFloatModel(idx,url,allowed){
+  if(!allowed)return;
+  new GLTFLoader().loadAsync(url).then(g=>{const root=g.scene,pivot=new THREE.Group();pivot.add(root);pivot.rotation.order='YXZ';root.updateMatrixWorld(true);let box=new THREE.Box3().setFromObject(root);const k=RIGH/(box.max.y-box.min.y||1);pivot.scale.setScalar(k);pivot.updateMatrixWorld(true);box=new THREE.Box3().setFromObject(pivot);const c=box.getCenter(V3());root.position.add(V3(-c.x/k,-box.min.y/k,-c.z/k));
+    root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.frustumCulled=false;if(o.material){o.material.envMapIntensity=.7;o.material.side=THREE.DoubleSide;}}});
+    const old=rigs[idx];if(old)tpRoot.remove(old.pivot);const r={pivot,root,B:{},rest:new Map(),ph:0,kick:0,yaw:undefined,lean:0,static:true,aura:old&&old.aura};tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
+const mirelleJoined=!!(SAVE.campaign&&SAVE.campaign.party&&SAVE.campaign.party.includes('mirelle'));
+loadFloatModel(3,'../3d/models/mirelle.glb?v=1',mirelleJoined);
 loadRigModel(0,'../3d/models/ondine.glb?v=3',beachOndine);
 loadRigModel(1,'../3d/models/caliste.glb?v=2',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
 function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur&&!P.dead||(tpOn&&P.dead&&i===P.cur);});}
 function setView(tp,quiet){tpOn=tp;gunHolder=tp?gunRoot:vm;gunHolder.add(gunG,flash,flashL);if(!tp){gunG.position.set(0,0,0);}armsG.visible=!tp;vm.visible=!tp;gunRoot.visible=tp;tpRoot.visible=tp;refreshRigs();if(!quiet)msg(tp?'THIRD PERSON':'FIRST PERSON',900);}
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&G.state==='play')setView(!tpOn);});
 const gripL=V3(0,-.12,.09),foreL=V3(-.02,-.07,-.3);
-function updRig(r,dt){const p=r.pivot,B=r.B;p.position.set(P.pos.x,P.pos.y,P.pos.z);const ty=P.yaw+Math.PI;if(r.yaw===undefined)r.yaw=ty;let dy=ty-r.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));r.yaw+=dy*Math.min(1,dt*14);r.lean+=((P.glideOn?1:0)-r.lean)*Math.min(1,dt*7);p.rotation.y=r.yaw;p.rotation.x=r.lean*1.2;p.rotation.z=P.dead?1.3:0;bodyLang(r,dt);p.position.y+=Math.sin(r.lean*1.2)*.75;p.updateMatrixWorld(true);
+function floatRig(r,dt){const p=r.pivot;p.position.set(P.pos.x,P.pos.y,P.pos.z);const ty=P.yaw+Math.PI;if(r.yaw===undefined)r.yaw=ty;let dy=ty-r.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));r.yaw+=dy*Math.min(1,dt*10);r.lean+=((P.glideOn?1:0)-r.lean)*Math.min(1,dt*7);
+  const fwdv=V3(0,0,1).applyAxisAngle(V3(0,1,0),r.yaw),spd=Math.hypot(P.vel.x,P.vel.z),f=P.vel.x*fwdv.x+P.vel.z*fwdv.z,sd=P.vel.x*fwdv.z-P.vel.z*fwdv.x,t=G.t;
+  r.tx=(r.tx||0)+((clamp(f/8,-.4,.6)*.35)-(r.tx||0))*Math.min(1,dt*6);r.tz=(r.tz||0)+((clamp(sd/8,-.5,.5)*.3)-(r.tz||0))*Math.min(1,dt*6);
+  p.rotation.y=r.yaw;p.rotation.x=r.lean*1.2+r.tx;p.rotation.z=P.dead?1.3:r.tz+Math.sin(t*1.3)*.025;
+  p.position.y+=(P.ground?.28:.12)+Math.sin(t*1.7)*.06+(P.dead?-.2:0);p.updateMatrixWorld(true);
+  const pq=p.getWorldQuaternion(new THREE.Quaternion()),face=V3(0,0,1).applyQuaternion(pq),pr=V3(-1,0,0).applyQuaternion(pq),ap=camera.position.clone().addScaledVector(camFwd(),aimDist),mid=V3(P.pos.x,p.position.y+.95,P.pos.z),base=mid.addScaledVector(pr,.38).addScaledVector(face,.45);
+  const gd=ap.clone().sub(base).normalize(),gq=new THREE.Quaternion().setFromUnitVectors(V3(0,0,-1),gd);gunRoot.quaternion.copy(gq);gunRoot.position.copy(base.clone().sub(gripL.clone().applyQuaternion(gq)));gunRoot.updateMatrixWorld(true);return null;}
+function updRig(r,dt){if(r.static)return floatRig(r,dt);const p=r.pivot,B=r.B;p.position.set(P.pos.x,P.pos.y,P.pos.z);const ty=P.yaw+Math.PI;if(r.yaw===undefined)r.yaw=ty;let dy=ty-r.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));r.yaw+=dy*Math.min(1,dt*14);r.lean+=((P.glideOn?1:0)-r.lean)*Math.min(1,dt*7);p.rotation.y=r.yaw;p.rotation.x=r.lean*1.2;p.rotation.z=P.dead?1.3:0;bodyLang(r,dt);p.position.y+=Math.sin(r.lean*1.2)*.75;p.updateMatrixWorld(true);
   if(r.kick>0){r.kick-=dt;r.mixer.update(dt);if(r.kick<=0){r.mixer.stopAllAction();for(const [b,q] of r.rest)b.quaternion.copy(q);B.Hips.position.copy(r.hips0);}else{flash.material.opacity=0;return 'kick';}}
   for(const [b,q] of r.rest)b.quaternion.copy(q);B.Hips.position.copy(r.hips0);p.updateMatrixWorld(true);
   const spd0=Math.hypot(P.vel.x,P.vel.z),useClip=!!r.walkAct&&P.ground&&!P.glideOn&&!P.hook.on&&spd0>.4;
@@ -739,7 +754,7 @@ function glideStep(dt,wish){const f=camFwd(),up=Math.max(0,f.y),dive=Math.max(0,
   P.vel.x+=(des.x-P.vel.x)*kx;P.vel.z+=(des.z-P.vel.z)*kx;P.vel.y+=(Math.max(des.y,-12)-P.vel.y)*Math.min(1,dt*1.3);P.vel.y-=3.2*dt;P.vel.y=clamp(P.vel.y,-14,7);P.vel.x+=wish.x*7*dt;P.vel.z+=wish.z*7*dt;}
 function updWings(dt,rg){const want=P.glideOn&&tpOn&&!scopeOn?1:0;P.wingK+=(want-P.wingK)*Math.min(1,dt*6);wingsG.visible=P.wingK>.03;if(!wingsG.visible||!rg)return;
   const col=(rg.aura||'150,220,255').split(',').map(Number);wingMat.color.setRGB(col[0]/255*.45+.55,col[1]/255*.45+.55,col[2]/255*.45+.55);
-  const sp=rg.B.Spine2.getWorldPosition(new THREE.Vector3()),pq=rg.pivot.getWorldQuaternion(new THREE.Quaternion()),back=new THREE.Vector3(0,.05,-.16).applyQuaternion(pq);wingsG.position.copy(sp).add(back);wingsG.quaternion.copy(pq);
+  const sp=rg.B.Spine2?rg.B.Spine2.getWorldPosition(new THREE.Vector3()):rg.pivot.localToWorld(new THREE.Vector3(0,1.5,0)),pq=rg.pivot.getWorldQuaternion(new THREE.Quaternion()),back=new THREE.Vector3(0,.05,-.16).applyQuaternion(pq);wingsG.position.copy(sp).add(back);wingsG.quaternion.copy(pq);
   const k=P.wingK,fl=Math.sin(G.t*5)*.12*k;wingsG.scale.setScalar(.15+.85*k);
   wingL.rotation.set(-Math.PI/2+.12,-.5-fl,.18+fl);wingR.rotation.set(-Math.PI/2+.12,.5+fl,-.18-fl);wingL.position.set(.1,0,0);wingR.position.set(-.1,0,0);}
 
