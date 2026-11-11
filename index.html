@@ -2086,6 +2086,7 @@
       <button class="btn" id="stGo">Continue</button>
       <button class="btn" id="stTrial" style="display:none">Face the Warden again</button>
       <button class="btn" id="stTrial2" style="display:none">Face the Matriarch again</button>
+      <button class="btn" id="stTrial3" style="display:none">Face the Conductor again</button>
     </div>
     <div class="hint" id="stCoast" style="font:italic 600 14px var(--serif);color:#efd39a;margin-top:8px"></div>
     <div class="hint" id="stHint"></div>
@@ -6454,7 +6455,6 @@ function isleUse() {
     }
     return;
   }
-  if (I.story) { if (o.t === 'chest') storyChest(o); return; }
   if (o.t === 'fork') {
     if (!save.isle.forks[o.id]) { save.isle.forks[o.id] = true; addRenown(20, true); seasonPlay('isles', { pts: 2, pearls: 4 }); questEvent('fork'); sfx('review'); S.banner = 'Tuning Fork Attuned'; S.sub = `${o.name} · open the map (M) to travel here`; S.bannerT = 2.6; fxBurst(o.x, o.z, '#9ff0ff', 2); isleXp(80); }
     else sfx('heal');
@@ -6501,7 +6501,6 @@ function leaveIsle() {
   go('lobby');
 }
 function isleObjective() {
-  if (IS && IS.story) return storyObjective();
   for (let d = 0; d < 4; d++) if (!save.isle.bosses[d]) return `Liberate ${REALMS[IDIST[d].realm].name}: defeat ${BOSSES[IDIST[d].realm].name} in its lair`;
   if (!save.isle.final) return 'All four districts are free. A podium glows in the Opera Plaza: answer the Impresario’s summons.';
   const n = Object.keys(save.isle.pages).length;
@@ -6742,7 +6741,6 @@ function updateIsle(dt) {
     const dd = Math.hypot(o.x - p.x, o.z - p.z); if (dd < bd) { bd = dd; best = o; }
   }
   I.prompt = best ? { o: best, text: best.t === 'fork' ? (save.isle.forks[best.id] ? 'Rest · bank your coins' : 'Attune the Tuning Fork') : best.t === 'chest' ? 'Open the gilded case' : best.t === 'shrine' ? 'Commune with the Echo Shrine' : best.t === 'ghost' ? ghostPrompt(best) : best.t === 'summons' ? 'Answer the Impresario’s summons' : 'Enter the Conservatory' } : null;
-  if (I.story && I.region !== 'sunken_coast') { I.prompt = null; let bd = 1.9; for (const o of IW.objs) { if (o.t !== 'chest' || o.d !== storyD() || CAMP().chests[o.id]) continue; const dd = Math.hypot(o.x - p.x, o.z - p.z); if (dd < bd) { bd = dd; I.prompt = { o, text: 'Open the gilded case' }; } } storyIsleTick(p); }
   if (I.region === 'sunken_coast') {
     I.prompt = null; let bd2 = 2.0;
     for (const o of IW.objs) {
@@ -7422,7 +7420,7 @@ function drawIsleMap(c, full) {
 function drawIsleHUD(c) {
   const I = IS, st = I.st || isleStats(), p = I.p, narrow = W < 700, pad = 16, Ld = save.isle, cw = narrow ? 240 : 320;
   if (I.house) drawHouseExpHUD(c);
-  if (I.region === 'sunken_coast') drawSunkenCoastHUD(c); else if (I.story) drawStoryHUD(c); else {
+  if (I.region === 'sunken_coast') drawSunkenCoastHUD(c); else {
   frame(c, pad, pad, cw, 74);
   c.textAlign = 'left'; c.fillStyle = '#e9c98a'; c.font = `700 ${narrow ? 13 : 15}px ${CAP}`; c.fillText(I.district < 0 ? 'THE OPERA PLAZA' : REALMS[IDIST[I.district].realm].name.toUpperCase(), pad + 14, pad + 26);
   c.fillStyle = '#f3ead8'; c.font = `600 12px ${CAP}`; c.fillText(`EXPEDITION ${roman(Ld.level)}`, pad + 14, pad + 48);
@@ -7469,7 +7467,6 @@ function renderIsle() {
   for (const pr of islePropsNear(CAM.x, CAM.z, 30)) add(pr.x, pr.z, pp => drawIsleProp(c, pr, pp), 1.6);
   for (const o of IW.objs) { if (o.t === 'camp' || o.t === 'door' || o.t === 'lair') continue; if (o.t === 'opera') { add(0, 4.2, () => drawOpera(c, fog)); continue; } if (Math.abs(o.x - p.x) > 32 || Math.abs(o.z - p.z) > 32) continue; add(o.x, o.z, pp => drawIsleObj(c, o, pp), 1.3); }
   for (const m of IW.mists) { if (dUnlocked(m.a) && dUnlocked(m.b)) continue; if (Math.abs(m.x - p.x) > 26 || Math.abs(m.z - p.z) > 26) continue; add(m.x, m.z, pp => drawIsleObj(c, { t: 'mist', a: dUnlocked(m.a) ? m.b : m.a }, pp), 1.3); }
-  if (I.story) for (const m of storyMarks()) add(m.x, m.z, pp => drawStoryMark(c, m, pp), 1.0);
   for (const e of I.enemies) if (Math.abs(e.x - p.x) < 30 && Math.abs(e.z - p.z) < 30) add(e.x, e.z, () => drawEnemy(c, e));
   if (I.boss) { const b = I.boss; add(b.x, b.z, () => drawBoss(c, b)); for (const o of b.orbs) add(o.x, o.z, () => drawOrb(c, o)); }
   for (const q of I.eshots) add(q.x, q.z, () => drawEShot(c, q));
@@ -9788,7 +9785,7 @@ const SPEAK = {
   ilario: ['Ilario Vale', '#f0d0c8'], eliane: ['Eliane', '#ffe0b0'], violetta: ['Violetta', '#d0a0ff'], gervais: ['Gervais', '#e8d8b0'],
   sirelle: ['Sirelle', '#b8e4f4'], emilia: ['Madame Emiline', '#e9c98a'], chief: ['Harbour-Master Brine', '#e0c898'], cue: ['The Masked Cue', '#ff8090'], extra: ['A hireling', '#c8c0b0'],
   conductor: ['The Crimson Conductor', '#ff6b81'],
-  verrine: ['Verrine', '#a8d0ff'], kraken: ['The Kraken Matriarch', '#d49aff'], card: ['A catalogue card', '#e9c98a'],
+  verrine: ['Verrine', '#a8d0ff'], oriel: ['Oriel', '#ffb0c8'], phantom: ['The Phantom Conductor', '#9a8aff'], kraken: ['The Kraken Matriarch', '#d49aff'], card: ['A catalogue card', '#e9c98a'],
   impresario: ['Arch-Cantor Valerius', '#ffd84a'],
   colossus: ['The Sovereign Colossus', '#ff7850'],
   morcant: ['Lord Morcant', '#7ed6df'],
@@ -9940,27 +9937,20 @@ const STORY_STEPS = [
   { obj: 'Find the voice that is reading Mirelle’s name aloud.', where: 'isle', at: () => axisPt(1, 41, -8), ev: 'c2_shelf' },
   { obj: 'Return backstage: Isolde remembered something.', where: 'hub' },
   { obj: 'Confront the Drowned Kraken Matriarch in the Archive of Ink.', where: 'isle', at: () => axisPt(1, 47, 0), ev: 'c2_boss_pre' },
-  { obj: 'Chapter II is complete. The story continues in Chapter III.', where: 'done' },
+  { obj: 'Chapter II is complete. Begin Chapter III: a third fork is ringing in the Coral Opera.', where: 'hub' },
+  { obj: 'Travel to the singing Tuning Fork in the Coral Opera.', where: 'isle', at: () => axisPt(2, 27, 3.2), ev: 'c3_fork' },
+  { obj: 'Follow the strings of the reef toward the Podium.', where: 'isle', at: () => axisPt(2, 35, 12), ev: 'c3_strings' },
+  { obj: 'Cross the tide-pool where the audience gathers.', where: 'isle', at: () => axisPt(2, 41, -8), ev: 'c3_reef' },
+  { obj: 'Return backstage: the company needs a plan for a held note.', where: 'hub' },
+  { obj: 'Confront the Phantom Conductor at the Podium.', where: 'isle', at: () => axisPt(2, 47, 0), ev: 'c3_boss_pre' },
+  { obj: 'Chapter III is complete. The story continues in Chapter IV.', where: 'done' },
 ];
-const storyD = () => CAMP().step >= 7 ? 1 : 0;
-const storyTitle = () => CAMP().step >= 6 ? 'The Ink That Does Not Dry' : 'The Voice Beneath the Aqueduct';
+const CH_TITLES = ['The Voice Beneath the Aqueduct', 'The Ink That Does Not Dry', 'The Held Note'];
+const chOf = n => n >= 12 ? 3 : n >= 6 ? 2 : 1;
 function setStep(n) { if (n <= CAMP().step) return; CAMP().step = n; persist(); if (mode === 'isle' && S && STORY_STEPS[n]) { S.banner = 'New objective'; S.sub = STORY_STEPS[n].obj; S.bannerT = 3.2; } }
 function setSide(n) { save.side.step = Math.max(save.side.step || 0, n); persist(); }
 function recruit(id) { const C = CAMP(); if (!C.party.includes(id)) C.party.push(id); campFix(); persist(); sfx('legend'); }
 function unlockAlt(id) { CAMP().alt[id] = true; persist(); sfx('legend'); }
-const STORY_EVENTS = {
-  fork: () => playScene('fork', () => storyBattle('b1', 'fork_win')),
-  aria: () => playScene('aria'),
-  mirelle_meet: () => playScene('mirelle_meet', () => storyBattle('b2', 'mirelle_win')),
-  warden_pre: () => playScene('warden_pre', () => storyBattle('b3', 'warden_win')),
-  c2_fork: () => playScene('c2_fork', () => storyBattle('c2b1', 'c2_fork_win')),
-  c2_card: () => playScene('c2_card'),
-  c2_shelf: () => playScene('c2_shelf', () => storyBattle('c2b2', 'c2_shelf_win')),
-  c2_boss_pre: () => playScene('c2_boss_pre', () => storyBattle('c2b3', 'c2_boss_win')),
-};
-function storyBattle(enc, winScene) {
-  go('battle', { enc, win: () => go('isle', { scene: winScene }), retreat: storyRetreat });
-}
 function sideStoryBattle(enc, winScene) {
   stopVoice();
   VN = null;
@@ -9974,46 +9964,6 @@ function sideStoryBattle(enc, winScene) {
       go('story');
     }
   });
-}
-function storyRetreat() {
-  const st = STORY_STEPS[CAMP().step];
-  if (IS && st && st.at) { const a = st.at(), d = Math.hypot(IS.p.x - a.x, IS.p.z - a.z) || 1; IS.p.x += (IS.p.x - a.x) / d * 3.5; IS.p.z += (IS.p.z - a.z) / d * 3.5; }
-  go('isle');
-}
-function storyIsleTick(p) {
-  if (DLG || TR.active || mode !== 'isle') return;
-  const st = STORY_STEPS[CAMP().step]; if (!st || st.where !== 'isle') return;
-  const a = st.at(); if (Math.hypot(a.x - p.x, a.z - p.z) < 2.0) STORY_EVENTS[st.ev]();
-}
-function storyObjective() {
-  const st = STORY_STEPS[CAMP().step]; if (!st) return '';
-  if (st.where !== 'isle') return st.obj + (st.where === 'hub' ? ' (Pause, then Return Backstage.)' : '');
-  const a = st.at(), d = Math.hypot(a.x - IS.p.x, a.z - IS.p.z); return `${st.obj} · ${Math.round(d)} paces · follow the golden light`;
-}
-function storyMarks() {
-  const C = CAMP(), st = STORY_STEPS[C.step], out = [];
-  if (st && st.where === 'isle') { const a = st.at(); out.push({ t: 'beacon', x: a.x, z: a.z }); }
-  if (C.step === 1) { const a = STORY_STEPS[1].at(); out.push({ t: 'npc', id: 'tobias', x: a.x + 1.2, z: a.z + 0.6 }); }
-  if (C.step === 3) { const a = STORY_STEPS[3].at(); out.push({ t: 'npc', id: 'mirelle', x: a.x + 0.8, z: a.z + 1.0 }); }
-  return out;
-}
-function drawStoryMark(c, m, pp) {
-  const k = pp.half * pp.s, vis = 1 - pp.f;
-  if (m.t === 'npc') { drawCompanion(c, pp.x, pp.y, k * 0.2 * worldFig(), m.id, S.t, {}); return; }
-  c.save(); c.globalCompositeOperation = 'lighter';
-  const g = c.createLinearGradient(0, pp.y - k * 9, 0, pp.y); g.addColorStop(0, 'rgba(255,220,140,0)'); g.addColorStop(1, `rgba(255,220,140,${0.45 * vis})`);
-  c.fillStyle = g; c.fillRect(pp.x - k * 0.18, pp.y - k * 9, k * 0.36, k * 9); c.restore();
-  glowAt(c, pp.x, pp.y - k * 0.3, k * 1.2, '255,220,140', 0.5 * vis, 'lighter');
-  c.strokeStyle = `rgba(255,233,170,${0.85 * vis})`; c.lineWidth = Math.max(1.5, k * 0.04);
-  for (let i = 0; i < 2; i++) { const r = ((S.t * 0.6 + i * 0.5) % 1); c.globalAlpha = 1 - r; c.beginPath(); c.ellipse(pp.x, pp.y, k * (0.3 + r * 1.2), k * (0.08 + r * 0.3), 0, 0, TAU); c.stroke(); }
-  c.globalAlpha = 1;
-}
-function storyExplore() {
-  if (TR.active) return;
-  startIsle(); IS.story = true; IS.enemies = []; IS.camps = {}; IS.boss = null; IS.carry = 0; IS.secondWind = false;
-  const f = IW.objs.find(o => o.id === 'hub'); IS.p.x = f.x + 1.3; IS.p.z = f.z - 1.3; IS.yaw = 0;
-  const c2 = CAMP().step >= 7;
-  go('travel', { from: -1, to: c2 ? 1 : 0, cycle: 1, dur: 2.6, then: 'isle', title: c2 ? 'The Drowned Library' : 'The Grand Aqueduct', sub: c2 ? 'Chapter II · The Ink That Does Not Dry' : 'Chapter I · The Voice Beneath the Aqueduct', act: 'The Story', status: 'Setting out' });
 }
 
 // --- the chapter's script (original story and characters) ---
@@ -10146,7 +10096,7 @@ const SCRIPT = {
     ['isolde', 'The other three forks are still ringing: the Library, the Coral Opera, the Cathedral. I can hear my sisters holding their notes.'],
     ['ondine', 'Then that is where we go next.'],
     ['isolde', 'When you do, listen for the lowest note in each chord. Whatever sleeps down there is listening for it too.'],
-    { if: () => CAMP().step >= 12, then: [['narrator', 'Two forks are free. The Coral Opera and the Abyssal Cathedral still ring. Chapter III is still being written.']], else: [['narrator', 'Another fork is ringing in the Drowned Library. Chapter II begins on the Story page.']] },
+    { if: () => CAMP().step >= 18, then: [['narrator', 'Three forks are free. Only the Abyssal Cathedral still rings. Chapter IV is still being written.']], else: [['narrator', CAMP().step >= 12 ? 'Another fork is ringing in the Coral Opera. Chapter III is on the Story page.' : 'Another fork is ringing in the Drowned Library. Chapter II is on the Story page.']] },
   ],
 };
 Object.assign(SCRIPT, {
@@ -10249,6 +10199,112 @@ Object.assign(SCRIPT, {
     ['narrator', 'Chapter II complete. 100 Tide Pearls and the review’s payout. A boss trial against the Matriarch is open backstage. The Coral Opera is next. Chapter III is still being written.'],
   ],
 });
+
+Object.assign(SCRIPT, {
+  c3_prologue: [
+    ['coralie', 'Ondine. The harbour water has gone warm, and the gutters are blooming. Anemones, in the middle of the night, in the Opera Plaza.'],
+    ['verrine', 'It is the third fork. A mezzo, singing a little above me. She is in the Coral Opera, and she is not alone. There is an audience.'],
+    ['isolde', 'An audience of anemones, and a conductor who will not let them leave.'],
+    ['narrator', 'Somewhere in the walls a single note is sounding, over and over, never changing. It has been sounding for a hundred years. Tonight, for the first time, you can hear it.'],
+    ['pell', 'That is… that is his A. No. It is his held note. He kept it up all those years, and I thought if I only ran far enough I would stop hearing it.'],
+    ['tobias', 'The Phantom Conductor.'],
+    ['pell', 'My master. He does not lower the baton. A note that never ends never fades, he says, and a thing that never fades never dies.'],
+    { choice: [
+      { t: 'Then we end the note for him.', then: [['pell', 'It is exactly what he will not forgive, and exactly what I came here to do.']] },
+      { t: 'Pell, you do not have to face him.', rel: { pell: 1 }, then: [['pell', 'I do. Thank you for the door, though. Nobody has ever left one open for me.']] },
+    ] },
+    ['mirelle', 'I know the Coral Opera. I think I sang in the third row. Everyone there is applauding.'],
+    ['ondine', 'Then we will give them something to applaud for.'],
+    { act: () => setStep(13) },
+    ['narrator', 'The company sets out south from the Opera Plaza, toward the Coral Opera.'],
+  ],
+  c3_fork: [
+    ['narrator', 'The Coral Opera is a natural amphitheatre of living crimson. Anemones line the seats in their thousands, and every one of them is clapping, a half-beat behind the one before.'],
+    ['ondine', 'A full house.'],
+    ['tobias', 'And not one of them has bought a ticket. Look at the fork. Somebody has strung it up with fly-lines, four hundred of them, and not one is tied off properly.'],
+    ['oriel', 'Is it… the interval? Please say it is the interval.'],
+    ['pell', 'They clap in fours. Listen. He conducts them from somewhere far below. Be ready. The house is about to rise.'],
+    ['narrator', 'The audience stands. Coral spears and reef-choristers peel out of the rows toward you.'],
+    ['narrator', 'A battle begins. The audience will not be quiet.'],
+  ],
+  c3_fork_win: [
+    ['oriel', 'Thank you. I am Oriel, the mezzo. The third note in the chord. I have been singing the same phrase since before your grandmothers.'],
+    ['ondine', 'Why does he hold it?'],
+    ['oriel', 'He borrowed the Lullaby from the Library and could not bear the last bar. The last bar is the part where it ends. So he holds one note and calls it the whole song, and our cage holds it open.'],
+    ['pell', 'He told me that endings were for people with no imagination.'],
+    ['oriel', 'He is at the Podium in the heart of the reef. The currents are his strings. Follow them, and do not let them tune you.'],
+    { act: () => setStep(14) },
+  ],
+  c3_strings: [
+    ['narrator', 'The reef hums. Long ribbons of current run between the coral like strings across a bridge, and each one is tuned to a different note.'],
+    ['mirelle', 'I can hear them. They are all out of tune with each other on purpose. He wants us to flatten, to match.'],
+    ['tobias', 'Whoever rigged this had four hundred fly-lines and no sense of safety. I respect it. I hate it.'],
+    ['ondine', 'There is a page pinned to the nearest string. It is still humming.'],
+    ['card', 'He keeps time with the tide. A beat he drops is a beat he cannot recover. Break his tempo with a rest, and the held note has nowhere to go.'],
+    { act: () => { CAMP().flags.knowsConductor = true; } },
+    ['narrator', 'You learned the Conductor’s pattern. In battle, you will see what he plans next, and a rest will break his shield.'],
+    ['pell', 'A rest. He never taught me to write a rest. I had to learn it in secret, from a street singer.'],
+    ['ondine', 'Then you are the only one here who knows how.'],
+    { act: () => setStep(15) },
+  ],
+  c3_reef: [
+    ['narrator', 'The tide-pool at the foot of the Podium is full of drowned singers in the front rows, swaying, their mouths open on one long note.'],
+    ['phantom', 'Apprentice. You are late. Take your stand. One, two, three, four.'],
+    ['pell', 'I… one, two, three…'],
+    ['mirelle', 'Pell. Pell, look at me. You do not have to count his number.'],
+    ['pell', 'It is the only number I ever knew.'],
+    ['ondine', 'Then learn another.'],
+    ['narrator', 'The front rows turn, and the song becomes a wall of teeth.'],
+    ['narrator', 'A battle begins. Pell must hold his own tempo.'],
+  ],
+  c3_reef_win: [
+    ['pell', 'For three beats I counted along. I heard myself do it.'],
+    ['tobias', 'Three beats, and then you stopped. That is what we call independence, kid.'],
+    { choice: [
+      { t: 'The fourth beat was yours.', rel: { pell: 1 }, then: [['pell', 'It was. It was smaller than I expected. But it was mine.']] },
+      { t: 'Good. Save the rest for the Podium.', then: [['pell', 'The rest. Yes. I have been saving it for a very long time.']] },
+    ] },
+    { act: () => { if (!CAMP().flags.c3ReefLoot) { CAMP().flags.c3ReefLoot = true; const got = grantLoot({ scores: 3, keeps: 1 }); showToast('Left in the tide-pool', 'You found', got.join(' · ')); } } },
+    ['mirelle', 'The strings are slackening. He felt that. We should go home first. A held note is a tired note, and we should rest before we ask it to end.'],
+    { act: () => setStep(16) },
+    ['narrator', 'The company returns backstage to rest and to plan.'],
+  ],
+  c3_interlude: [
+    ['verrine', 'Isolde and I have been practising. A cadence for two voices. It does not end the note. It gives it somewhere to go.'],
+    ['isolde', 'Low and high. Bass and contralto. Mezzo above us, and the fourth, in the Cathedral, above all of us.'],
+    ['pell', 'And I will write the rest. Not a silence. A rest. A breath the whole orchestra can take together.'],
+    ['coralie', 'You do not need to destroy the music, children. You need to give it a place to land.'],
+    ['ondine', 'Then that is what we will do. Pell, you conduct the rest. We will sing it.'],
+    ['pell', 'Maestro Ashgrove. It sounds almost real.'],
+    { act: () => setStep(17) },
+    ['narrator', 'The company descends once more, toward the Podium in the heart of the Coral Opera.'],
+  ],
+  c3_boss_pre: [
+    ['narrator', 'The Podium rises from the reef like a throne of living coral. On it stands a tall figure in a black coat the colour of deep water, a baton raised above his head. It has not moved in a hundred years.'],
+    ['phantom', 'LATE. THE FOURTH BAR BEGINS. NO ONE LEAVES BEFORE THE CODA.'],
+    ['pell', 'Master.'],
+    ['phantom', 'APPRENTICE. YOU HAVE COME BACK TO YOUR STAND.'],
+    ['pell', 'I came back to take the baton out of your hand.'],
+    ['phantom', 'A HELD NOTE NEVER FADES. WHAT NEVER FADES NEVER DIES. WHAT WOULD YOU HAVE INSTEAD? AN ENDING?'],
+    ['ondine', 'I would have a rest, and then a next phrase. That is all a song has ever asked.'],
+    ['narrator', 'Boss battle: the Phantom Conductor. He announces his next move before he strikes. Break his golden shields, and give his held note a rest.'],
+  ],
+  c3_boss_win: [
+    ['phantom', 'THE BATON… IT IS NOT HEAVY. IT WAS NEVER HEAVY.'],
+    ['narrator', 'For a hundred years the baton has been raised. Now, slowly, it comes down. Every anemone in the Coral Opera falls quiet, and then, one by one, they begin to sing something different.'],
+    ['oriel', 'The note has ended. I can breathe. Oh, I can breathe.'],
+    ['phantom', 'Was it… good?'],
+    ['pell', 'It was long, Master. It was very, very long.'],
+    ['narrator', 'The Phantom Conductor smiles, the first expression anyone has seen on him, and fades into the applause like a note into a rest.'],
+    ['verrine', 'Three voices free. Isolde, Verrine, Oriel. One fork left, and the lullaby is nearly out of room.'],
+    ['isolde', 'And what sleeps below the Cathedral has stopped turning over. It is listening.'],
+    ['tobias', 'I vote we do not keep it waiting on a held note.'],
+    ['ondine', 'Come home, Oriel. The Tide Opera has a very large stage, and the front row is empty.'],
+    { act: () => { setStep(18); if (!CAMP().flags.chapter3) { CAMP().flags.chapter3 = true; if (save.wish) save.wish.pearls = (save.wish.pearls || 0) + 100; persist(); showToast('Chapter III Complete', '100 Tide Pearls and a rave review', 'The held note ends.'); award('chapter3'); } } },
+    ['narrator', 'Chapter III complete. 100 Tide Pearls and the review’s payout. A boss trial against the Conductor is open backstage. The Abyssal Cathedral is next. Chapter IV is still being written.'],
+  ],
+});
+
 // The Prompter’s Bargain: the attached tale, retold for this house. It does not move Chapter I.
 Object.assign(SCRIPT, {
   side0: [
@@ -11368,6 +11424,7 @@ Object.assign(SCRIPT, {
   ],
 
 });
+REVIEWS.push({ id: 'chapter3', head: 'The Rest', quote: '“He never learned to let a song end. They taught him.”', paper: 'The Coral Courier', how: 'Complete Chapter III of the Story.', reward: 700 });
 REVIEWS.push({ id: 'chapter2', head: 'Unfiled', quote: '“A voice that repeats is a catalogue. A voice that changes is a song.”', paper: 'The Highwater Chronicle', how: 'Complete Chapter II of the Story.', reward: 600 });
 REVIEWS.push({ id: 'chapter1', head: 'A Voice Set Free', quote: '“The first soprano sings again.”', paper: 'The Tidewater Gazette', how: 'Complete Chapter I of the Story.', reward: 500 });
 REVIEWS.push({ id: 'side_ch2', head: 'The Crimson Seam', quote: '“Two souls hold the line where the stone failed.”', paper: 'The Highwater Chronicle', how: 'Complete Chapter II of the Side Story.', reward: 600 });
@@ -11442,6 +11499,10 @@ const HEROES = {
 const FOES = {
   chorister: { name: 'Drowned Chorister', art: 'wraith', hp: 125, atk: 13, def: 5, spd: 92, tough: 30, weak: ['tide', 'brass'] },
   hound: { name: 'Bilge Hound', art: 'runner', hp: 80, atk: 11, def: 3, spd: 122, tough: 20, weak: ['choir'] },
+  coral_usher: { name: 'Anemone Usher', art: 'shielder', hp: 200, atk: 17, def: 12, spd: 88, tough: 42, weak: ['tide', 'choir'] },
+  reef_siren: { name: 'Reef Siren', art: 'wraith', hp: 170, atk: 17, def: 7, spd: 98, tough: 36, weak: ['brass', 'tide'] },
+  reef_hound: { name: 'Reef Hound', art: 'runner', hp: 105, atk: 13, def: 4, spd: 126, tough: 22, weak: ['choir'] },
+  phantom_conductor: { name: 'The Phantom Conductor', boss: true, bossId: 'conductor', hp: 2300, atk: 32, def: 14, spd: 108, tough: 125, weak: ['choir', 'brass', 'tide'], plan: ['baton_cut', 'golden_orbs', 'phantom_tempo', 'held_note'] },
   ink_wraith: { name: 'Ink Wraith', art: 'wraith', hp: 150, atk: 15, def: 6, spd: 94, tough: 34, weak: ['tide', 'brass'] },
   ink_hound: { name: 'Quill Hound', art: 'runner', hp: 95, atk: 12, def: 4, spd: 124, tough: 22, weak: ['choir'] },
   ink_scribe: { name: 'Ink Scribe', art: 'cantor', hp: 170, atk: 14, def: 8, spd: 90, tough: 38, weak: ['choir', 'tide'] },
@@ -11475,6 +11536,10 @@ const ENCS = {
   b3: { party: null, foes: ['warden'], music: 'boss', boss: true, name: 'The Abyssal Warden' },
   c2b1: { party: null, foes: ['ink_wraith', 'ink_hound', 'ink_wraith'], music: 'aqueduct', name: 'Pages on the Move' },
   c2b2: { party: null, foes: ['ink_scribe', 'ink_hound', 'ink_scribe'], music: 'aqueduct', name: 'The Re-shelving' },
+  c3b1: { party: null, foes: ['coral_usher', 'reef_siren', 'reef_hound'], music: 'aqueduct', name: 'The House Rises' },
+  c3b2: { party: null, foes: ['reef_siren', 'coral_usher', 'reef_siren'], music: 'aqueduct', name: 'The Front Rows' },
+  c3b3: { party: null, foes: ['phantom_conductor'], music: 'boss', boss: true, name: 'The Phantom Conductor' },
+  trial3: { party: null, foes: ['phantom_conductor'], music: 'boss', boss: true, trial: true, name: 'Boss Trial: The Conductor Returns' },
   c2b3: { party: null, foes: ['kraken_matriarch'], music: 'boss', boss: true, name: 'The Drowned Kraken Matriarch' },
   trial2: { party: null, foes: ['kraken_matriarch'], music: 'boss', boss: true, trial: true, name: 'Boss Trial: The Matriarch Returns' },
   trial: { party: null, foes: ['warden'], music: 'boss', boss: true, trial: true, name: 'Boss Trial: The Warden Returns' },
@@ -11572,7 +11637,7 @@ function startBattle(opts) {
     if (mut.id === 'allegro') for (const u of units) { u.spd = Math.round(u.spd * 1.15); if (u.side === 'ally') u.crit = (u.crit || 10) + 15; }
   }
   BT = { E, opts, units, res, harmony: 3, maxH: 5, cur: null, phase: 'start', anim: null, finq: [], texts: [], banner: { txt: opts.spire ? `Floor ${opts.spireFloor} · ${E.name}` : E.name, sub: E.boss ? 'A great adversary takes the stage' : 'The company takes its places', t: 2.2 },
-    target: null, allyTarget: null, wait: 1.2, tipI: 0, tipT: 0, preview: null, graceUsed: false, knows: !!(CAMP().flags.knowsWarden || CAMP().flags.knowsKraken), shake: 0, ended: false, finSig: '', slashes: [], fg: null, fgT: 1, fgScreen: null,
+    target: null, allyTarget: null, wait: 1.2, tipI: 0, tipT: 0, preview: null, graceUsed: false, knows: !!(CAMP().flags.knowsWarden || CAMP().flags.knowsKraken || CAMP().flags.knowsConductor), shake: 0, ended: false, finSig: '', slashes: [], fg: null, fgT: 1, fgScreen: null,
     speed: save.settings.battleSpeed || 1, autoPlay: !!save.settings.battleAuto, autoTimer: 0 };
   if (opts.house) egBtScale(units, opts.house);
   for (const u of units) u.av = baseAV(u) * (u.side === 'ally' ? 0.85 * (1 - ((u.fx && u.fx.advStart) || 0)) : 1);
@@ -12105,6 +12170,25 @@ function foeAct(u) {
     else if (act === 'ink_cloud') btAnim(u, 'Cloud of Ink', () => { for (const a of btAllies()) { btHit(u, a, 1.05); if (a.alive) a.buffs.weak = 2; } BT.shake = 0.7; sfx('ariaR'); }, done, { tgt: t, dur: 1.2 });
     else if (act === 'call_scribes') btAnim(u, 'Call the Scribes', () => { const f = mkFoe('ink_scribe'); f.av = baseAV(f); BT.units.push(f); sfx('bell'); }, done);
     else btAnim(u, 'THE INDEX OF THE DROWNED', () => { for (const a of btAllies()) btHit(u, a, 1.9); BT.shake = 1.2; S.flash = 0.5; sfx('phase'); }, done, { tgt: t, kind: 'melee', dur: 1.4, at: 0.7 });
+  } else if (u.key === 'coral_usher') {
+    const t = pickAlly();
+    if (Math.random() < 0.4) btAnim(u, 'Coral Bulwark', () => { btShield(u, 240, 2); btText(u, 'Coral Bulwark', '#ff8fa0', 15); sfx('power'); }, done, { tgt: u, kind: 'cast' });
+    else btAnim(u, 'Anemone Slam', () => { btHit(u, t, 1.35, { tough: 15 }); }, done, { tgt: t, kind: 'melee' });
+  } else if (u.key === 'reef_siren') {
+    const t = pickAlly();
+    if (Math.random() < 0.35) btAnim(u, 'Siren Swell', () => { for (const a of btAllies()) btHit(u, a, 0.6); if (t && t.alive) { t.buffs.damp = 2; btText(t, 'Out of tune: −20% damage', '#c8a0ff', 15); } }, done, { tgt: t });
+    else btAnim(u, 'Reef Hymn', () => btHit(u, t, 1.1), done, { tgt: t });
+  } else if (u.key === 'reef_hound') {
+    const t1 = pickAlly();
+    btAnim(u, 'Barnacle Bite', () => { btHit(u, t1, 0.65); const t2 = btAllies().length ? pickAlly() : null; if (t2) btHit(u, t2, 0.6); }, done, { tgt: t1, kind: 'melee' });
+  } else if (u.key === 'phantom_conductor') {
+    if (!u.p2 && u.hp < u.maxHp * 0.5) { u.p2 = true; u.plan = ['phantom_tempo', 'golden_orbs', 'held_note', 'baton_cut']; u.pi = 0; BT.banner = { txt: 'The Held Note', sub: 'The Conductor stops breathing and plays on', t: 2.2 }; sfx('phase'); }
+    const act = wardenPlanNext(u); u.pi++;
+    const t = pickAlly();
+    if (act === 'baton_cut') btAnim(u, 'Baton Cut', () => { btHit(u, t, 1.8); if (t && t.alive) btDelay(t, 0.2); BT.shake = 0.6; sfx('bossIn'); }, done, { tgt: t, kind: 'melee', dur: 1.15 });
+    else if (act === 'golden_orbs') btAnim(u, 'Golden Metronomes', () => { btShield(u, 440, 2); u.buffs.dmgUp = 2; btText(u, 'Golden Metronomes', '#ffd070', 16); sfx('power'); }, done, { tgt: u, kind: 'cast' });
+    else if (act === 'phantom_tempo') btAnim(u, 'Phantom Tempo', () => { for (const a of btAllies()) { btHit(u, a, 1.1); if (a.alive) a.buffs.weak = 2; } BT.shake = 0.7; sfx('ariaR'); }, done, { tgt: t, dur: 1.2 });
+    else btAnim(u, 'THE HELD NOTE', () => { for (const a of btAllies()) btHit(u, a, 2.0); BT.shake = 1.3; S.flash = 0.5; sfx('phase'); }, done, { tgt: t, kind: 'melee', dur: 1.4, at: 0.7 });
   } else wardenAct(u, done);
 }
 function wardenPlanNext(u) { let a = u.plan[u.pi % u.plan.length]; if (a === 'verdict' && !u.charging) a = 'gavel'; if (a === 'summon' && btFoes().length >= 3) a = 'gavel'; if (a === 'call_scribes' && btFoes().length >= 3) a = 'ink_lash'; return a; }
@@ -12117,6 +12201,14 @@ function wardenAct(u, done) {
   else btAnim(u, 'Tolling Verdict', () => { u.charging = false; for (const t of btAllies()) btHit(u, t, 1.8); BT.shake = 1; S.flash = 0.3; sfx('bossIn'); }, done, { dur: 1.0, at: 0.5 });
 }
 function wardenIntent(u) {
+  if (u.key === 'phantom_conductor') {
+    return {
+      baton_cut: 'Next: Baton Cut, a heavy blow that delays one performer',
+      golden_orbs: 'Next: Golden Metronomes, a shield that empowers his attacks',
+      phantom_tempo: 'Next: Phantom Tempo, weakening the whole company',
+      held_note: 'Next: THE HELD NOTE, striking the whole company'
+    }[wardenPlanNext(u)] || 'Next: The Conductor raises the baton';
+  }
   if (u.key === 'kraken_matriarch') {
     return {
       ink_lash: 'Next: Ink Lash, a heavy blow that delays one performer',
@@ -13001,8 +13093,6 @@ const REHS = [
   { id: 'reh_pell', name: 'First Baton · with Pell', ok: () => CAMP().step >= 6 },
   { id: 'isolde_talk', name: 'A Word with Isolde', ok: () => CAMP().step >= 6 },
 ];
-const STORY_BEATS = ['The call', 'The fork', 'The page', 'The shrine', 'A visitor', 'The Warden', 'Rest'];
-const CH2_BEATS = ['The letter in the ink', 'The fork', 'The cards', 'The shelf', 'A listener', 'The Matriarch', 'Rest'];
 const SIDE_BEATS = [
   'The gate', 'The bargain', 'The third morning', 'The violet edge', 'A lie for a friend', 'Highwater', 'The sunken playhouse', 'Any last words',
   'The dying whisper', 'The red sentry', 'Madame Emiline’s ledger', 'The drowned catacombs', 'The shadow chorus', 'The vessel’s secret', 'The harbor trembles',
@@ -13120,9 +13210,10 @@ const SIDE_BILL = [
 function showTales() { if (DLG || TR.active) return; taleView = 'pick'; renderStory(); sfx('ui'); }
 function renderTalePick() {
   const C = CAMP(), s = save.side.step || 0;
-  const pm = $('pickMain'); pm.querySelector('b').textContent = C.step >= 6 ? 'Chapter II' : 'Chapter I';
-  pm.querySelector('small').textContent = C.step >= 6 ? 'The Ink That Does Not Dry. A second fork is ringing in the Drowned Library, and the Library is cataloguing everyone.' : 'The Voice Beneath the Aqueduct. The Tuning Forks have started to sing, and the company goes looking.';
-  $('pickMainEm').textContent = C.step >= 12 ? 'Chapter II is complete' : C.step === 6 ? 'Chapter I complete · Chapter II awaits' : C.step > 6 ? CH2_BEATS[C.step - 6] : C.step === 0 ? 'Not yet begun' : STORY_BEATS[Math.min(C.step, STORY_BEATS.length - 1)];
+  const pm = $('pickMain'), ch = chOf(C.step), ROM = ['I', 'II', 'III'];
+  pm.querySelector('b').textContent = 'Chapter ' + ROM[ch - 1];
+  pm.querySelector('small').textContent = [`${CH_TITLES[0]}. The Tuning Forks have started to sing, and the company goes looking.`, `${CH_TITLES[1]}. A second fork is ringing in the Drowned Library, and the Library is cataloguing everyone.`, `${CH_TITLES[2]}. A third fork rings in the Coral Opera, where a conductor has not lowered his baton in a hundred years.`][ch - 1];
+  $('pickMainEm').textContent = C.step >= 18 ? 'Chapter III is complete' : (C.step === 6 || C.step === 12) ? `Chapter ${ROM[ch - 2]} complete · Chapter ${ROM[ch - 1]} awaits` : C.step === 0 ? 'Not yet begun' : MAIN_BEATS[C.step].name;
   const chName = s >= 64 ? 'Chapter X [Part 2 Grand Climax]' : s >= 57 ? 'Chapter IX' : s >= 50 ? 'Chapter VIII' : s >= 43 ? 'Chapter VII' : s >= 36 ? 'Chapter VI' : s >= 29 ? 'Chapter V [Part 1 Climax]' : s >= 22 ? 'Chapter IV' : s >= 15 ? 'Chapter III' : s >= 8 ? 'Chapter II' : 'Chapter I';
   $('pickSideEm').textContent = s >= SIDE_BEATS.length ? 'Part 2 Complete (All 10 Chapters told)' : s === 0 ? 'Not yet begun' : `${chName} · ${SIDE_BEATS[Math.min(s, SIDE_BEATS.length - 1)]}`;
 }
@@ -13222,20 +13313,21 @@ function renderStory() {
   renderTalePick();
   if (taleView === 'side') { renderSideStory(); return; }
   if (taleView !== 'main') return;
-  const C = CAMP(), st = STORY_STEPS[C.step], sN = C.step, done = sN >= 12, i0 = Math.min(sN, 11), c2 = sN >= 6;
-  $('stChap').textContent = done ? 'Main story · Chapter II · complete' : `Main story · ${i0 >= 6 ? 'Chapter II' : 'Chapter I'} · ${MAIN_BEATS[i0].name}`;
-  $('stRail').innerHTML = MAIN_BEATS.map((B, n) => `<i class="${sN > n ? 'got' : sN === n ? 'on' : ''} ${n <= sN ? 'live' : ''}" data-main="${n}" title="${n >= 6 ? 'Chapter II' : 'Chapter I'} · Scene ${n + 1}: ${B.name}" style="${n <= sN ? 'cursor:pointer;' : ''}${n === 6 ? 'margin-left:4px;border-left:1px solid rgba(233,201,138,.5);padding-left:1px;' : ''}"></i>`).join('');
+  const C = CAMP(), st = STORY_STEPS[C.step], sN = C.step, done = sN >= 18, i0 = Math.min(sN, 17), ch = chOf(Math.min(sN, 17)), ROM = ['I', 'II', 'III'];
+  $('stChap').textContent = done ? 'Main story · Chapter III · complete' : `Main story · Chapter ${ROM[ch - 1]} · ${MAIN_BEATS[i0].name}`;
+  $('stRail').innerHTML = MAIN_BEATS.map((B, n) => `<i class="${sN > n ? 'got' : sN === n ? 'on' : ''} ${n <= sN ? 'live' : ''}" data-main="${n}" title="${'Chapter ' + ROM[chOf(n) - 1]} · Scene ${n + 1}: ${B.name}" style="${n <= sN ? 'cursor:pointer;' : ''}${n === 6 || n === 12 ? 'margin-left:4px;border-left:1px solid rgba(233,201,138,.5);padding-left:1px;' : ''}"></i>`).join('');
   $('stRail').querySelectorAll('[data-main]').forEach(el => el.onclick = () => { const n = +el.dataset.main; if (TR.active || DLG || n > CAMP().step) return; playMainBeat(n, true); });
-  $('stMain').querySelector('.title').innerHTML = c2 ? 'The Ink That<br>Does Not Dry' : 'The Voice Beneath<br>the Aqueduct';
-  $('stSyn').textContent = c2 ? 'A second fork is ringing in the Drowned Library, and ink is rising in the gutters of Highwater. Isolde hears her sister holding on, and the Library is cataloguing everyone.' : 'The Tuning Forks have started to sing, and the singers beside them are gone. Lady Ondine goes down into the Grand Aqueduct to find out who is staging this performance.';
-  $('stObj').textContent = done ? 'Chapter II is complete. The Library has fallen silent, and two forks still ring: the Coral Opera and the Abyssal Cathedral.' : (st ? st.obj : '');
-  $('stGo').textContent = sN === 0 ? 'Begin Chapter I' : sN === 6 ? 'Begin Chapter II' : done ? 'Chapter III is not yet written' : 'Continue: ' + MAIN_BEATS[sN].name;
+  $('stMain').querySelector('.title').innerHTML = ['The Voice Beneath<br>the Aqueduct', 'The Ink That<br>Does Not Dry', 'The Held<br>Note'][ch - 1];
+  $('stSyn').textContent = ['The Tuning Forks have started to sing, and the singers beside them are gone. Lady Ondine goes down into the Grand Aqueduct to find out who is staging this performance.', 'A second fork is ringing in the Drowned Library, and ink is rising in the gutters of Highwater. Isolde hears her sister holding on, and the Library is cataloguing everyone.', 'The harbour has gone warm and the gutters are blooming. A third fork rings in the Coral Opera, where the Phantom Conductor has held one note for a hundred years, and Pell must face the master he ran from.'][ch - 1];
+  $('stObj').textContent = done ? 'Chapter III is complete. Three forks are silent. Only the Abyssal Cathedral still rings, and what sleeps beneath it is listening.' : (st ? st.obj : '');
+  $('stGo').textContent = (sN === 0 || sN === 6 || sN === 12) ? `Begin Chapter ${ROM[ch - 1]}` : done ? 'Chapter IV is not yet written' : 'Continue: ' + MAIN_BEATS[sN].name;
   $('stGo').disabled = done;
   $('stHint').textContent = 'Told on this stage in full visual novel presentation. Each chapter integrates tactical turn-based combat encounters. Click a lit scene on the rail above to replay it.';
   const forks = Object.keys(save.isle.forks || {}).filter(k => k !== 'hub').length, pages = Object.keys(save.isle.pages || {}).length, bosses = Object.keys(save.isle.bosses || {}).filter(k => save.isle.bosses[k]).length;
   $('stCoast').innerHTML = `<b>Open World Progress:</b> Tuning Forks ${forks}/4 · Lost Arias ${pages}/12 · Great adversaries ${bosses}/4`;
   $('stTrial').style.display = C.step >= 6 ? '' : 'none';
   $('stTrial2').style.display = C.step >= 12 ? '' : 'none';
+  $('stTrial3').style.display = C.step >= 18 ? '' : 'none';
   $('stCast').innerHTML = C.party.map(id => {
     const H = HEROES[id], lv = C.chars[id] ? C.chars[id].lvl : 1;
     return `<button class="coCard" data-who="${id}"><b class="g" style="color:${AFF[H.aff].col}">${AFF[H.aff].g}</b><span>${H.short}<small>${H.role.split('·')[0]}</small></span><b>Lv ${lv}</b></button>`;
@@ -13261,12 +13353,13 @@ function playMainBeat(n, replay) {
 }
 $('stGo').onclick = () => {
   const C = CAMP(); if (DLG || TR.active) return;
-  if (C.step < 12) playMainBeat(C.step, false);
+  if (C.step < 18) playMainBeat(C.step, false);
 };
 $('stExplore').onclick = () => {
   if (DLG || TR.active) return;
   taleView = 'main'; startIsle(); go('travel', { from: -1, to: 0, cycle: 1, dur: 2.8, then: 'isle', title: 'The Drowned Isles', sub: 'An expedition beyond the stage' });
 };
+$('stTrial3').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial3', win: () => go('story'), retreat: () => go('story') }); };
 $('stTrial2').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial2', win: () => go('story'), retreat: () => go('story') }); };
 $('stParty').onclick = () => { if (!DLG && !TR.active) go('party'); };
 $('stTrial').onclick = () => { if (!DLG && !TR.active) go('battle', { enc: 'trial', win: () => go('story'), retreat: () => go('story') }); };
@@ -13303,6 +13396,12 @@ const MAIN_BEATS = [
   { name: 'The shelf', scenes: ['c2_shelf'], battle: 'c2b2', win: 'c2_shelf_win' },
   { name: 'A listener', scenes: ['c2_interlude'] },
   { name: 'The Matriarch', scenes: ['c2_boss_pre'], battle: 'c2b3', win: 'c2_boss_win' },
+  { name: 'The warm water', scenes: ['c3_prologue'] },
+  { name: 'The house rises', scenes: ['c3_fork'], battle: 'c3b1', win: 'c3_fork_win' },
+  { name: 'The strings', scenes: ['c3_strings'] },
+  { name: 'The front rows', scenes: ['c3_reef'], battle: 'c3b2', win: 'c3_reef_win' },
+  { name: 'A rest, written', scenes: ['c3_interlude'] },
+  { name: 'The Conductor', scenes: ['c3_boss_pre'], battle: 'c3b3', win: 'c3_boss_win' },
 ];
 const MAINVN = {
   prologue: { bg: 'm_backstage', cast: ['ondine', 'coralie'], music: 'intermission', beat: 0 },
@@ -13323,6 +13422,15 @@ const MAINVN = {
   c2_interlude: { bg: 'm_backstage', cast: ['isolde', 'ondine', 'pell'], music: 'intermission', beat: 10 },
   c2_boss_pre: { bg: 'm_archive', cast: ['ondine', 'pell', 'mirelle'], music: 'boss', beat: 11 },
   c2_boss_win: { bg: 'm_archive', cast: ['ondine', 'isolde', 'pell'], music: 'results', beat: 11 },
+  c3_prologue: { bg: 'm_backstage', cast: ['coralie', 'pell', 'ondine'], music: 'intermission', beat: 12 },
+  c3_fork: { bg: 'm_coral', cast: ['ondine', 'tobias', 'pell'], music: 'coral', beat: 13 },
+  c3_fork_win: { bg: 'm_coral', cast: ['ondine', 'pell', 'tobias'], music: 'coral', beat: 13 },
+  c3_strings: { bg: 'm_coral', cast: ['mirelle', 'ondine', 'pell'], music: 'libretto', beat: 14 },
+  c3_reef: { bg: 'm_coral', cast: ['pell', 'ondine', 'mirelle'], music: 'coral', beat: 15 },
+  c3_reef_win: { bg: 'm_coral', cast: ['pell', 'tobias', 'ondine'], music: 'gallery', beat: 15 },
+  c3_interlude: { bg: 'm_backstage', cast: ['isolde', 'pell', 'ondine'], music: 'intermission', beat: 16 },
+  c3_boss_pre: { bg: 'm_podium', cast: ['ondine', 'pell', 'tobias'], music: 'boss', beat: 17 },
+  c3_boss_win: { bg: 'm_podium', cast: ['pell', 'ondine', 'isolde'], music: 'results', beat: 17 },
 };
 function drawMainVNBg(c, key, t) {
   const w = W, h = H, hz = h * 0.62, rn = i => { const x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -13333,6 +13441,8 @@ function drawMainVNBg(c, key, t) {
     m_hall: { top: '#0a0618', bot: '#2a1a56', lamp: '154,124,255', floor: '#1a1236', arches: 1, bell: 1 },
     m_library: { top: '#0e0818', bot: '#33244e', lamp: '255,196,130', floor: '#2c1f3e', shelves: 1, pages: 1 },
     m_archive: { top: '#05030c', bot: '#1a1030', lamp: '212,154,255', floor: '#0e0818', shelves: 1, pages: 1, ink: 1 },
+    m_coral: { top: '#1c0614', bot: '#561a3e', lamp: '255,150,170', floor: '#561c36', seats: 1, coral: 1, water: 1 },
+    m_podium: { top: '#12040e', bot: '#3c1030', lamp: '255,208,112', floor: '#2a0c20', seats: 1, coral: 1, podium: 1 },
   }[key] || { top: '#0a0a14', bot: '#1c1c30', lamp: '233,201,138', floor: '#141420' };
   const g = c.createLinearGradient(0, 0, 0, hz); g.addColorStop(0, P.top); g.addColorStop(1, P.bot); c.fillStyle = g; c.fillRect(0, 0, w, h);
   const fl = c.createLinearGradient(0, hz, 0, h); fl.addColorStop(0, P.floor); fl.addColorStop(1, '#05050a'); c.fillStyle = fl; c.fillRect(0, hz, w, h - hz);
@@ -13340,6 +13450,9 @@ function drawMainVNBg(c, key, t) {
   if (P.shelves) for (let side = 0; side < 2; side++) for (let i = 0; i < 6; i++) { const sw = w * .075, x = side ? w - (i + 1) * sw * 1.15 : i * sw * 1.15, top = h * (.04 + i * .035), bh = hz - top + h * .02 * i; c.fillStyle = `rgba(${22 + i * 4},${14 + i * 3},${34 + i * 5},.96)`; c.fillRect(x, top, sw, bh); for (let r = 0; r < 14; r++) { const yy = top + 8 + r * (bh / 14); c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x, yy, sw, 2); for (let b = 0; b < 5; b++) { c.fillStyle = `hsla(${(rn(i * 100 + r * 7 + b + side * 50) * 50 + 230) | 0},32%,${14 + rn(r + b) * 12}%,.85)`; c.fillRect(x + 3 + b * (sw - 6) / 5, yy - (bh / 14) * .6, (sw - 6) / 5 - 1, (bh / 14) * .55); } } }
   if (P.stones) for (let i = 0; i < 5; i++) { const x = w * (.14 + i * .18), sh = h * (.2 + rn(i) * .12); c.fillStyle = 'rgba(6,14,22,.92)'; c.beginPath(); c.roundRect ? c.roundRect(x - w * .03, hz - sh, w * .06, sh, 14) : c.rect(x - w * .03, hz - sh, w * .06, sh); c.fill(); const gl = c.createRadialGradient(x, hz - sh * .6, 2, x, hz - sh * .6, w * .08); gl.addColorStop(0, `rgba(${P.lamp},.35)`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(x - w * .1, hz - sh * 1.3, w * .2, sh * 1.4); }
   if (P.door) { for (let i = 0; i < 4; i++) { const x = w * (.12 + i * .25); c.fillStyle = 'rgba(10,6,14,.9)'; c.fillRect(x - w * .06, hz - h * .34, w * .12, h * .34); c.strokeStyle = `rgba(${P.lamp},.45)`; c.lineWidth = 2; c.strokeRect(x - w * .06, hz - h * .34, w * .12, h * .34); const gl = c.createRadialGradient(x, hz - h * .4, 2, x, hz - h * .4, w * .09); gl.addColorStop(0, `rgba(${P.lamp},.5)`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(x - w * .1, hz - h * .5, w * .2, h * .2); } c.fillStyle = 'rgba(122,28,44,.5)'; c.fillRect(0, hz + h * .02, w, h * .05); }
+  if (P.seats) for (let r = 0; r < 5; r++) for (let i = 0; i < 26; i++) { const x = (i + .5 + (r % 2) * .5) * w / 26, y = hz - h * (.04 + r * .05), a = .5 + .5 * Math.sin(t * 2 + i * .7 + r); c.fillStyle = `rgba(${34 + r * 8},8,${28 + r * 6},.85)`; c.beginPath(); c.arc(x, y, w * .014, 0, TAU); c.fill(); c.fillStyle = `rgba(${P.lamp},${.12 + .15 * a})`; c.beginPath(); c.arc(x, y - w * .004, w * .005, 0, TAU); c.fill(); }
+  if (P.coral) for (let i = 0; i < 9; i++) { const x = w * (i + .5) / 9 + (rn(i) - .5) * 30, bh = h * (.12 + rn(i + 3) * .16); c.strokeStyle = `rgba(${P.lamp},.45)`; c.lineWidth = 4; for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * .35 + Math.sin(t * .8 + i + k) * .08; c.beginPath(); c.moveTo(x, hz + 4); c.quadraticCurveTo(x + Math.cos(a) * bh * .5, hz - bh * .5, x + Math.cos(a) * bh, hz + Math.sin(a) * bh); c.stroke(); } }
+  if (P.podium) { const px = w * .5; c.fillStyle = 'rgba(30,8,26,.95)'; c.beginPath(); c.moveTo(px - w * .16, hz + h * .02); c.lineTo(px - w * .1, hz - h * .1); c.lineTo(px + w * .1, hz - h * .1); c.lineTo(px + w * .16, hz + h * .02); c.closePath(); c.fill(); const bg2 = c.createRadialGradient(px, hz - h * .3, 4, px, hz - h * .3, h * .35); bg2.addColorStop(0, `rgba(${P.lamp},${.35 + .1 * Math.sin(t * 3)})`); bg2.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = bg2; c.fillRect(px - h * .4, hz - h * .7, h * .8, h * .7); c.strokeStyle = `rgba(${P.lamp},.9)`; c.lineWidth = 3; c.beginPath(); c.moveTo(px, hz - h * .1); c.lineTo(px + h * .02, hz - h * .5); c.stroke(); }
   if (P.bell) { const bx = w * .5, by = h * .12, bh = h * .34; c.fillStyle = 'rgba(8,4,20,.9)'; c.beginPath(); c.moveTo(bx - bh * .2, by + bh * .1); c.quadraticCurveTo(bx - bh * .2, by - bh * .05, bx, by - bh * .1); c.quadraticCurveTo(bx + bh * .2, by - bh * .05, bx + bh * .2, by + bh * .1); c.lineTo(bx + bh * .38, by + bh * .7); c.quadraticCurveTo(bx, by + bh * .78, bx - bh * .38, by + bh * .7); c.closePath(); c.fill(); c.strokeStyle = `rgba(${P.lamp},${.4 + .2 * Math.sin(t * 2)})`; c.lineWidth = 3; c.stroke(); }
   if (P.fork) { const fx = w * .5, fy = hz, fh = h * .34, pu = .5 + .5 * Math.sin(t * 2.4); c.strokeStyle = `rgba(196,150,70,.95)`; c.lineWidth = Math.max(6, w * .012); c.lineCap = 'round'; c.beginPath(); c.moveTo(fx - fh * .12, fy - fh); c.lineTo(fx - fh * .12, fy - fh * .3); c.quadraticCurveTo(fx, fy - fh * .12, fx + fh * .12, fy - fh * .3); c.lineTo(fx + fh * .12, fy - fh); c.moveTo(fx, fy - fh * .14); c.lineTo(fx, fy); c.stroke(); const gl = c.createRadialGradient(fx, fy - fh * .65, 4, fx, fy - fh * .65, fh * .8); gl.addColorStop(0, `rgba(${P.lamp},${.22 + .2 * pu})`); gl.addColorStop(1, `rgba(${P.lamp},0)`); c.fillStyle = gl; c.fillRect(fx - fh, fy - fh * 1.5, fh * 2, fh * 1.6); c.strokeStyle = `rgba(${P.lamp},${.4 * (1 - pu)})`; c.lineWidth = 2; for (let k = 1; k < 4; k++) { c.beginPath(); c.arc(fx, fy - fh * .65, fh * (.2 + k * .22 + pu * .08), 0, TAU); c.stroke(); } }
   if (P.water) { for (let i = 0; i < 18; i++) { const yy = hz + 6 + i * (h - hz) / 18, wob = Math.sin(t * 1.3 + i * 1.7) * 12; c.strokeStyle = `rgba(${P.lamp},${.06 + .05 * Math.sin(t + i)})`; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, yy); for (let x = 0; x <= w; x += 40) c.lineTo(x, yy + Math.sin(x * .012 + t * 1.5 + i) * 2.5 + wob * .1); c.stroke(); } }
@@ -15901,7 +16014,7 @@ function startVN(opts = {}) {
   const beatTitle = SIDE_BEATS[num] || 'THE UNDERSTUDIES';
   const epNum = String(num + 1).padStart(2, '0');
   { const vc = document.querySelector('.vn-chapter'); if (vc) vc.textContent = MV ? 'TIDEBOUND CORRIDOR' : 'TIDEBOUND: THE UNDERSTUDIES'; }
-  $('vnTitle').textContent = MV ? `THE MAIN STORY // ${num >= 6 ? 'CH. II' : 'CH. I'} // ${MAIN_BEATS[num].name.toUpperCase()}` : `EPISODE ${epNum} // ${chRoman} // ${beatTitle.toUpperCase()}`;
+  $('vnTitle').textContent = MV ? `THE MAIN STORY // CH. ${['I', 'II', 'III'][chOf(num) - 1]} // ${MAIN_BEATS[num].name.toUpperCase()}` : `EPISODE ${epNum} // ${chRoman} // ${beatTitle.toUpperCase()}`;
 
   $('sc-vn').classList.remove('ui-hidden');
   $('vnAuto').classList.remove('active');
@@ -15994,6 +16107,8 @@ function vnShowLine(L) {
     pell: '// APPRENTICE CONDUCTOR · BRASS',
     isolde: '// FIRST SOPRANO · THE AQUEDUCT FORK',
     verrine: '// CONTRALTO · THE LIBRARY FORK',
+    oriel: '// MEZZO · THE CORAL OPERA FORK',
+    phantom: '// MAESTRO · THE PHANTOM CONDUCTOR',
     warden: '// THE ABYSSAL WARDEN',
     kraken: '// ARCHIVIST · THE KRAKEN MATRIARCH',
     voice: '// A VOICE IN THE FORK',
@@ -16652,6 +16767,10 @@ const ENCLOOT = {
   b3: { scores: 10, keeps: 2, minRar: 4, inst: 'silentbell' },
   trial: { scores: 4, keeps: 2, minRar: 4 },
   trial2: { scores: 5, keeps: 2, minRar: 4 },
+  trial3: { scores: 6, keeps: 2, minRar: 4 },
+  c3b1: { scores: 6, keeps: 1 },
+  c3b2: { scores: 7, keeps: 2 },
+  c3b3: { scores: 14, keeps: 2, minRar: 4, inst: 'ivorybaton' },
   c2b1: { scores: 5, keeps: 1 },
   c2b2: { scores: 6, keeps: 2 },
   c2b3: { scores: 12, keeps: 2, minRar: 4, inst: 'prompterbaton' },
@@ -16669,12 +16788,6 @@ const ENCLOOT = {
   side_ch5_colossus: { scores: 14, keeps: 4, minRar: 5 },
   side_ch5_impresario: { scores: 20, keeps: 5, minRar: 5, inst: 'gildedfan' },
 };
-const CHESTLOOT = { c00: { scores: 2, keeps: 1, inst: 'coralbow' }, c01: { scores: 2, keeps: 1 }, c02: { scores: 2, keeps: 1, inst: 'lanternhook' }, c03: { scores: 2, keeps: 1 }, c04: { scores: 3, keeps: 2, inst: 'gildedfan' } };
-function storyChest(o) {
-  const C = CAMP(); if (C.chests[o.id]) return; C.chests[o.id] = true;
-  const got = grantLoot(CHESTLOOT[o.id] || { scores: 2, keeps: 1 });
-  sfx('power'); fxBurst(o.x, o.z, '#ffd84a', 1.8); showToast('A gilded case', 'You found', got.join(' · ')); persist();
-}
 function equipInst(id, inst) {
   const C = CAMP(), cur = C.chars[id].inst, holder = Object.keys(C.chars).find(k => C.chars[k].inst === inst);
   if (holder && holder !== id) C.chars[holder].inst = cur || null;
@@ -16707,36 +16820,6 @@ let OWM = null;
 function setExplorer(id) {
   const C = CAMP(); if (!C.party.includes(id) || C.explorer === id) return;
   C.explorer = id; persist(); sfx('ui'); if (IS) fxBurst(IS.p.x, IS.p.z, AFF[HEROES[id].aff].col, 1);
-}
-function drawStoryHUD(c) {
-  const I = IS, C = CAMP(), p = I.p, rad = Math.min(70, W * 0.09), cy = rad + 30;
-  c.textAlign = 'left'; c.font = `600 11px ${CAP}`; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.6)';
-  const area = '· ' + (I.district < 0 ? 'The Opera Plaza' : REALMS[IDIST[Math.max(0, I.district)].realm].name);
-  c.strokeText(area, 14, 17); c.fillStyle = '#f3ead8'; c.fillText(area, 14, 17);
-  if (!I.map) drawIsleMap(c, false);
-  // the quest tracker under the map
-  const st = STORY_STEPS[C.step], tx = 14, ty = cy + rad + 30, tw = Math.min(330, W * 0.42);
-  c.textAlign = 'left'; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.6)';
-  if (st) {
-    c.fillStyle = '#e9c98a'; c.beginPath(); c.moveTo(tx + 7, ty - 13); c.lineTo(tx + 13, ty - 7); c.lineTo(tx + 7, ty - 1); c.lineTo(tx + 1, ty - 7); c.closePath(); c.fill();
-    c.font = `700 ${W < 700 ? 14 : 16}px ${SERIF}`; c.strokeText(storyTitle(), tx + 20, ty - 2); c.fillStyle = '#f3ead8'; c.fillText(storyTitle(), tx + 20, ty - 2);
-    c.font = `italic 600 ${W < 700 ? 13 : 14}px ${SERIF}`; let line = '', yy = ty + 18; const words = storyObjective().split(' ');
-    for (const w of words) { const t2 = line ? line + ' ' + w : w; if (c.measureText(t2).width > tw && line) { c.strokeText(line, tx + 20, yy); c.fillStyle = 'rgba(243,234,216,.9)'; c.fillText(line, tx + 20, yy); line = w; yy += 18; } else line = t2; }
-    if (line) { c.strokeText(line, tx + 20, yy); c.fillStyle = 'rgba(243,234,216,.9)'; c.fillText(line, tx + 20, yy); }
-  }
-  // the party on the right: click a portrait or press 1 to 4 to explore as that performer
-  I.partyHits = [];
-  const L = C.lineup, rowH = Math.min(52, H * 0.075), x1 = W - 14, y0 = Math.max(70, H * 0.28);
-  L.forEach((id, i) => {
-    const y = y0 + i * rowH, r = rowH * 0.36, px = x1 - r - 22, cur = C.explorer === id, H2 = HEROES[id];
-    c.textAlign = 'right'; c.font = `600 ${W < 700 ? 12 : 14}px ${SERIF}`; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.65)'; c.strokeText(H2.short, px - r - 10, y + 4); c.fillStyle = cur ? '#ffe9a0' : '#f3ead8'; c.fillText(H2.short, px - r - 10, y + 4);
-    c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(px - r - 70, y + 9, 60, 3); c.fillStyle = AFF[H2.aff].col; c.fillRect(px - r - 70, y + 9, 60, 3);
-    c.save(); c.beginPath(); c.arc(px, y, r, 0, TAU); c.fillStyle = 'rgba(16,12,26,.92)'; c.fill(); c.clip(); const s = r * 1.3; drawFigFlat(c, id, px, y + r * 0.2 + 1.72 * s, s, S.t + i, {}); c.restore();
-    c.strokeStyle = cur ? '#efd39a' : 'rgba(233,201,138,.5)'; c.lineWidth = cur ? 2.5 : 1; c.beginPath(); c.arc(px, y, r, 0, TAU); c.stroke();
-    c.fillStyle = cur ? '#efd39a' : 'rgba(10,8,14,.85)'; c.beginPath(); c.arc(x1 - 8, y + r * 0.6, 8, 0, TAU); c.fill(); c.fillStyle = cur ? '#24160a' : '#e9c98a'; c.font = `700 10px ${CAP}`; c.textAlign = 'center'; c.fillText(String(i + 1), x1 - 8, y + r * 0.6 + 3.5);
-    I.partyHits.push({ id, x0: px - r - 80, x1: x1, y0: y - r, y1: y + r });
-  });
-  if (!TOUCH) { c.textAlign = 'right'; c.font = `600 11px ${CAP}`; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.6)'; const hint = `${keyLabel('run')} · RUN ${p.run ? '◆' : '◇'}     C · CHARACTERS   L · COMPANY   B · INVENTORY   J · JOURNAL`; c.strokeText(hint, W - 16, H - 16); c.fillStyle = 'rgba(243,234,216,.75)'; c.fillText(hint, W - 16, H - 16); }
 }
 // --- the menus ---
 function openOW(tab) {
@@ -17361,7 +17444,6 @@ $('chPrev').onclick = () => chStep(-1); $('chNext').onclick = () => chStep(1);
 
 // battles and story cases also give upgrade materials, whatever encounters the story defines
 for (const k in ENCLOOT) { const L = ENCLOOT[k]; if (L.rosin == null) L.rosin = L.boss || L.minRar ? 3 : 1 + Math.floor((L.scores || 0) / 5); if (L.thread == null) L.thread = 1 + (L.keeps || 0); }
-for (const k in CHESTLOOT) { const L = CHESTLOOT[k]; if (L.rosin == null && L.thread == null) { if (L.inst) L.thread = 1; else L.rosin = 1; } }
 
 // ================= the last house: endgame teams in a top-down hall =================
 const EGSTAGES = [
@@ -19467,7 +19549,7 @@ function processFrontDispatch() {
   recapShow('Dispatch from the Drowned Front', rows, got.join(' ') || 'Your honours and errands have been updated.');
 }
 document.querySelectorAll('[data-href]').forEach(b => b.onclick = () => { sfx('ui'); location.href = b.dataset.href; });
-function frontSub() { const el = document.getElementById('lFrontSub'), F = save.front; if (el) el.textContent = F && (F.kills || F.clears) ? `${fmt(F.kills)} drowned defeated · ${Object.keys(F.bosses).length} of 5 bosses` : 'A third-person war for the whole company'; }
+function frontSub() { const el = document.getElementById('lFrontSub'), F = save.front; if (el) el.textContent = F && (F.kills || F.clears) ? `${fmt(F.kills)} drowned defeated · ${Object.keys(F.bosses).length} of 5 bosses` : 'A third-person war for the whole company · two chapters'; }
 (function () { const prev = onModeEnter; onModeEnter = function (m, o) { const r = prev.apply(this, arguments); if (m === 'chars') { save.settings.sawChars = true; } if (m === 'lobby') { try { processFrontDispatch(); frontSub(); renderToday(); tdApplyGates(); } catch (e) { console.warn(e); } } return r; }; })();
 try { renderToday(); tdApplyGates(); } catch (e) {}
 
