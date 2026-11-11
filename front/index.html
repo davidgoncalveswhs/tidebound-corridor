@@ -693,7 +693,7 @@ function loadRigModel(idx,url,allowed){
     if(g.animations&&g.animations.length){r.mixer=new THREE.AnimationMixer(root);r.clip=g.animations.find(a=>/kick/i.test(a.name))||null;const wc=g.animations.find(a=>/walk/i.test(a.name));if(wc){const tk=wc.tracks.find(x=>x.name==='Hips.position');if(tk){const v=tk.values;for(let i=0;i<v.length;i+=3){v[i]=v[0];v[i+2]=v[2];}}r.walkAct=r.mixer.clipAction(wc);r.walkAct.play();r.walkAct.enabled=false;}}
     tpRoot.add(pivot);rigs[idx]=r;refreshRigs();}).catch(e=>console.warn('Model not loaded',url,e));}
 loadRigModel(0,'../3d/models/ondine.glb?v=3',beachOndine);
-loadRigModel(1,'../3d/models/caliste.glb?v=1',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
+loadRigModel(1,'../3d/models/caliste.glb?v=2',!!(SAVE.wish&&SAVE.wish.ownedLeads&&SAVE.wish.ownedLeads.caliste));
 function refreshRigs(){rigs.forEach((r,i)=>{if(r)r.pivot.visible=tpOn&&i===P.cur&&!P.dead||(tpOn&&P.dead&&i===P.cur);});}
 function setView(tp,quiet){tpOn=tp;gunHolder=tp?gunRoot:vm;gunHolder.add(gunG,flash,flashL);if(!tp){gunG.position.set(0,0,0);}armsG.visible=!tp;vm.visible=!tp;gunRoot.visible=tp;tpRoot.visible=tp;refreshRigs();if(!quiet)msg(tp?'THIRD PERSON':'FIRST PERSON',900);}
 addEventListener('keydown',e=>{if(e.code==='KeyV'&&G.state==='play')setView(!tpOn);});
